@@ -1,54 +1,66 @@
-# Agentes-IA
+# 🏆 Agentes-IA — Terminal de Inteligencia Deportiva & Pronósticos Cuantitativos
 
-## 🚀 Resumen del Progreso del día 23 de septiembre 2026
-El día de hoy se estableció con éxito la arquitectura base del proyecto y se logró la primera prueba de vida (End-to-End) del sistema. Ya contamos con un entorno de desarrollo funcional que conecta una interfaz de usuario moderna con el modelo local Qwen 2.5, ejecutado mediante Ollama, sentando las bases para la integración del pipeline de agentes.
-
-##  Hitos Alcanzados Hoy
-
-### 1. Definición de Arquitectura y Entorno
-*   **Estructura Modular:** Separación estricta del proyecto en dos capas: `frontend` (React/Vite) y `backend` (FastAPI/Python).
-*   **Entorno Local:** Configuración de entorno virtual (`venv`) para aislar dependencias de Python y Ollama para ejecutar el modelo localmente.
-
-### 2. Desarrollo del Backend (API)
-*   **Implementación de FastAPI:** Creación de un servidor asíncrono con configuración CORS habilitada para permitir peticiones locales.
-*   **Integración de IA (LangChain):** Conexión local exitosa con Ollama.
-*   **Modelo principal:** El backend utiliza `qwen2.5:1.5b`, sin requerir API key externa.
-
-### 3. Desarrollo del Frontend (Dashboard)
-*   **Maquetado Inicial:** Creación del panel de control usando React y Tailwind CSS.
-*   **Panel de Jugadas (Mock):** Renderizado de una tabla base para visualizar el Top de recomendaciones (partido, cuota, nivel de confianza).
-*   **Módulo de Consultas Aisladas:** Implementación de un chat lateral diseñado para cumplir el requerimiento de consultas dinámicas e independientes por usuario.
-
-### 4. Conexión End-to-End
-*   El frontend se comunica exitosamente con el backend mediante peticiones POST.
-*   El chat procesa respuestas locales de Qwen mediante el endpoint de Ollama.
+Sistema multi-agente autónomo impulsado por **Ollama (IA local)** y **DuckDuckGo Live Search** para análisis deportivo verídico en tiempo real, detección de apuestas con valor (+EV), verificación de copas actuales (Champions League, Libertadores, Liguilla Liga MX), estado en vivo de partidos, noticias de jugadores, bajas médicas y ventanas emergentes interactivas con imágenes oficiales.
 
 ---
 
-## 💻 Instrucciones para levantar el entorno local
+## 🚀 Capacidades y Novedades Implementadas
 
-Para ejecutar el proyecto, se requieren dos terminales:
+### 1. 🔍 Navegación Verídica con DuckDuckGo (Portales Oficiales & Fact-Checking)
+* Conexión en vivo a portales deportivos de referencia: **SoccerStats**, **FlashScore**, **ESPN Deportes**, **Diario MARCA**, **UEFA.com**, **Transfermarkt**, **Diario AS**, **Yahoo Sports** y **BeSoccer**.
+* Extracción y cotejo de:
+  - **Estado en Vivo / Programación**: Detecta si el partido se encuentra en juego actualmente (minuto y marcador en tiempo real) o fecha/hora/estadio programado.
+  - **Clasificación a Copas Actuales**: Si el club participa y está clasificado en la **UEFA Champions League** (Fase de Liga Suiza), **Copa Libertadores**, **Concachampions** o **Liguilla Directa de Liga MX**, junto a su posición en tabla y puntos acumulados.
+  - **Noticias & Reporte Médico de Jugadores**: Bajas confirmadas, roturas musculares, dudas médicas y sanciones disciplinarias.
+  - **Citas Indexadas Estrictas**: Referencias `[1]`, `[2]`, `[3]` con enlaces directos para auditoría sin alucinaciones.
 
-**Terminal 1 (Backend):**
-\`\`\`bash
+### 2. 🪟 Ventana Emergente Interactiva con Imágenes Oficiales (`MatchModal.jsx`)
+Al hacer clic en cualquier partido o escanear un cruce personalizado, se despliega una **Ventana Emergente (Modal)** con diseño Glassmorphism de alta gama que incluye:
+* **Escudos & Logos Oficiales**: Insignias vectoriales y de alta resolución de ambos clubes y del torneo en disputa.
+* **Badge de Estado en Vivo**: Indicador pulsante `🔴 EN DIRECTO (Minuto X' • Marcador)` o `🟢 PROGRAMADO (Estadio & Fecha)`.
+* **Dictamen Directo "¿A Cuál Apostar?"**:
+  - Veredicto claro y justificado del Agente Decisor.
+  - Medidor de confianza porcentual (%) y calificación de riesgo.
+  - Cálculo de Valor Esperado (+EV) y gestión de banca Kelly (Stake sugerido).
+  - Momios en tiempo real para **Caliente.mx 🇲🇽**, **Pinnacle Sports ⚡** y **Bet365 🌐** con botones de acceso directo.
+* **Pestaña de Jugadores & Bajas Médicas**: Tarjetas con fotos de jugadores clave, rol y sala médica detallada (🚑 lesión, ⚠️ duda, 🟨 sanción).
+* **Pestaña de Clasificación & Copas Actuales**: Estado en competiciones continentales, tabla de posiciones y racha en los últimos 5 partidos.
+* **Pestaña de Fuentes Verídicas**: Enlaces y fragmentos extraídos de DuckDuckGo con buscador integrado para consultas adicionales.
+* **Pestaña de Dossier IA**: Informe completo generado por el Agente Recopilador.
+
+### 3. 🤖 Pipeline Multi-Agente Local (Ollama)
+* **Agente Recopilador (`recopilador.py`)**: Rastreador, fact-checker y estructurador de inteligencia deportiva.
+* **Agente Decisor (`decisor.py`)**: Estratega cuantitativo que define la cuota justa, probabilidad real y recomendación definitiva.
+
+---
+
+## 💻 Instrucciones para Iniciar el Sistema
+
+### Requisito: Ollama
+Asegúrate de tener Ollama activo:
+```bash
+ollama serve
+```
+
+### 1. Iniciar Backend (FastAPI en Puerto 8000)
+```bash
 cd backend
-source venv/Scripts/activate   # (O venv/bin/activate en Mac/Linux)
-uvicorn main:app --reload
-\`\`\`
-*(El servidor correrá en http://localhost:8000)*
+python -m uvicorn main:app --reload --port 8000
+```
+*API activa en:* `http://localhost:8000` | *Documentación:* `http://localhost:8000/docs`
 
-*Ollama debe estar instalado y el modelo se descarga una sola vez con `ollama pull qwen2.5:1.5b`. En Windows, el servicio normalmente inicia automáticamente; si no, ejecuta `ollama serve` en otra terminal.*
-
-**Terminal 2 (Frontend):**
-\`\`\`bash
+### 2. Iniciar Frontend (React + Vite)
+```bash
 cd frontend
 npm run dev
-\`\`\`
-*(La interfaz correrá en http://localhost:5173)*
+```
+*Interfaz de usuario activa en:* `http://localhost:5173`
 
 ---
 
-## Próximos Pasos (Backlog)
-1. **Formato de Chat:** Integrar renderizado de Markdown (`react-markdown`) en el frontend para mostrar texto enriquecido (negritas, listas).
-2. **Base de Datos:** Levantar instancia local de MongoDB y definir los esquemas de las colecciones (`matches`, `odds_tracking`, `teams_stats`).
-3. **Pipeline de Agentes:** Estructurar LangGraph en el backend para crear los dos agentes acordados (Recopilador y Decisor) y dotarlos de herramientas de búsqueda (DuckDuckGo).
+## 🧪 Pruebas Automatizadas
+Para validar todo el pipeline (DuckDuckGo Search + Ollama + Copas + Dictamen de Apuesta):
+```bash
+cd backend
+python test_e2e.py
+```

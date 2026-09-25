@@ -1,34 +1,409 @@
-import { useEffect, useRef, useState } from 'react'
-import { ArrowRight, BarChart3, CalendarDays, ChevronRight, CircleAlert, Clock3, Filter, Flame, Home, Info, MessageCircle, Search, Send, ShieldCheck, Sparkles, Star, TrendingUp, Trophy, X, Zap } from 'lucide-react'
-import './App.css'
+import React, { useState, useEffect } from 'react';
+import { Navbar } from './components/Navbar';
+import { MatchList } from './components/MatchList';
+import { SoccerStatsView } from './components/SoccerStatsView';
+import { BookmakersView } from './components/BookmakersView';
+import { AgentWorkspace } from './components/AgentWorkspace';
+import { ChatConsole } from './components/ChatConsole';
+import { MatchModal } from './components/MatchModal';
+import { Activity, BarChart3, Bot, Brain, Coins, Database, ShieldCheck, Sparkles, TrendingUp, Trophy } from 'lucide-react';
 
-const signals = [
-  { id: 'sparta', home: 'Sparta Praga', away: 'RB Salzburg', homeCode: 'SPA', awayCode: 'RBS', league: 'Champions League', kickoff: 'Hoy · 14:00', market: 'Local / Más de 2.5 goles', odd: '+110', confidence: 85, signal: 'Alta convicción', detail: 'Localía fuerte y tendencia ofensiva consistente.', form: ['V', 'V', 'E', 'V', 'V'], risk: 'Salzburg llega con transición ofensiva peligrosa.', evidence: ['Sparta anotó en 8 de sus últimos 9 partidos locales.', 'Ambos equipos superan 1.6 goles esperados en su muestra reciente.'] },
-  { id: 'cruz', home: 'Cruz Azul', away: 'Toluca', homeCode: 'CAZ', awayCode: 'TOL', league: 'Liga MX', kickoff: 'Mañana · 20:00', market: 'Ambos equipos anotan', odd: '-105', confidence: 74, signal: 'Señal favorable', detail: 'Dos ataques productivos; confirmar alineaciones.', form: ['V', 'E', 'V', 'D', 'V'], risk: 'La señal cambia si falta el delantero titular.', evidence: ['Los dos equipos marcaron en 4 de sus últimos 5 encuentros.', 'Toluca promedia 1.8 goles por partido como visitante.'] },
-  { id: 'arsenal', home: 'Arsenal', away: 'Napoli', homeCode: 'ARS', awayCode: 'NAP', league: 'Champions League', kickoff: 'Jue · 13:45', market: 'Arsenal empate no acción', odd: '-120', confidence: 68, signal: 'En observación', detail: 'Ventaja local, con riesgo por rotación de plantilla.', form: ['E', 'V', 'V', 'D', 'E'], risk: 'Revisar la convocatoria antes del inicio.', evidence: ['Arsenal no perdió 7 de sus últimas 8 localías.', 'La disponibilidad de titulares define el nivel de confianza.'] },
-]
-const nav = [{ label: 'Resumen', icon: Home }, { label: 'Análisis', icon: BarChart3 }, { label: 'Consultas', icon: MessageCircle }]
-const filters = ['Todas', 'Alta convicción', 'Señal favorable', 'En observación']
+function App() {
+  const [status, setStatus] = useState(null);
+  const [checkingStatus, setCheckingStatus] = useState(false);
+  const [models, setModels] = useState([]);
+  const [activeModel, setActiveModel] = useState("qwen2.5:1.5b");
+  const [matches, setMatches] = useState([]);
+  const [uefaData, setUefaData] = useState(null);
+  const [bookmakersData, setBookmakersData] = useState(null);
+  const [currentView, setCurrentView] = useState("radar"); // "radar" | "bookmakers" | "uefa"
+  
+  // Estado del Workspace y Modal de Análisis
+  const [activeAnalysis, setActiveAnalysis] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analyzingMatchId, setAnalyzingMatchId] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMatch, setModalMatch] = useState(null);
 
-export default function App() {
-  const [view, setView] = useState('Resumen'); const [filter, setFilter] = useState('Todas'); const [selected, setSelected] = useState(null)
-  const [query, setQuery] = useState(''); const [messages, setMessages] = useState([]); const [loading, setLoading] = useState(false)
-  const inputRef = useRef(null); const closeRef = useRef(null); const mainRef = useRef(null)
-  useEffect(() => { mainRef.current?.focus() }, [view])
-  useEffect(() => { if (!selected) return undefined; closeRef.current?.focus(); const escape = (event) => event.key === 'Escape' && setSelected(null); window.addEventListener('keydown', escape); return () => window.removeEventListener('keydown', escape) }, [selected])
-  const openChat = (prompt = '') => { setView('Consultas'); if (prompt) setQuery(prompt); requestAnimationFrame(() => inputRef.current?.focus()) }
-  const send = async () => { const question = query.trim(); if (!question || loading) return; const next = [...messages, { role: 'user', text: question }]; setMessages(next); setQuery(''); setLoading(true); try { const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mensaje: question }) }); const data = await response.json(); if (!response.ok) throw new Error(); setMessages([...next, { role: 'assistant', text: String(data.respuesta ?? 'No hubo respuesta disponible.') }]) } catch { setMessages([...next, { role: 'assistant', text: 'No pudimos consultar al analista. Revisa que el servicio local esté activo e intenta nuevamente.' }]) } finally { setLoading(false) } }
-  const shown = filter === 'Todas' ? signals : signals.filter((signal) => signal.signal === filter)
-  return <div className="app-shell"><a className="skip-link" href="#main-content">Saltar al contenido</a><aside className="sidebar" aria-label="Navegación principal"><div className="brand"><span className="brand-mark" aria-hidden="true"><Sparkles size={19} /></span><span>Agentes <b>IA</b></span></div><nav className="nav-list">{nav.map(({ label, icon: Icon }) => <button key={label} type="button" className={`nav-item ${view === label ? 'is-active' : ''}`} onClick={() => setView(label)} aria-current={view === label ? 'page' : undefined}><Icon size={19} aria-hidden="true" /><span>{label}</span></button>)}</nav><div className="model-status"><span className="status-pulse" aria-hidden="true" /><div><strong>Analista disponible</strong><span>Qwen 2.5 · Local</span></div></div></aside><main id="main-content" ref={mainRef} className="main-content" tabIndex="-1"><header className="topbar"><div><p className="eyebrow"><span className="live-dot" /> MODO DEMO · JORNADA 06</p><h1>{heading(view)}</h1></div><button type="button" className="primary-button" onClick={() => openChat()}><MessageCircle size={18} aria-hidden="true" />Nueva consulta</button></header>{view === 'Resumen' && <Overview onAnalyze={() => setView('Análisis')} onAsk={() => openChat('¿Qué debo vigilar antes de elegir una señal?')} onSelect={setSelected} />}{view === 'Análisis' && <Analysis filter={filter} setFilter={setFilter} shown={shown} onSelect={setSelected} />}{view === 'Consultas' && <Chat query={query} setQuery={setQuery} messages={messages} loading={loading} inputRef={inputRef} send={send} onPrompt={openChat} />}</main>{selected && <Detail signal={selected} closeRef={closeRef} close={() => setSelected(null)} ask={() => { setSelected(null); openChat(`Analiza los riesgos de ${selected.home} vs ${selected.away}.`) }} />}</div>
+  // Estado del Chat
+  const [mensajes, setMensajes] = useState([]);
+  const [chatCargando, setChatCargando] = useState(false);
+
+  // Cargar estado inicial del sistema, modelos, partidos, SoccerStats y Casas de Apuestas
+  useEffect(() => {
+    fetchSystemStatus();
+    fetchMatches();
+    fetchUefaSoccerStats();
+    fetchBookmakersOdds();
+  }, []);
+
+  // Helper seguro para parsear JSON sin crashear en caso de desconexión o 500
+  const safeFetchJson = async (url, options = {}) => {
+    const res = await fetch(url, options);
+    const text = await res.text();
+    if (!text || !text.trim()) {
+      throw new Error(`Respuesta vacía del servidor (${res.status}). Verifica que el backend esté corriendo en el puerto 8000.`);
+    }
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      throw new Error(`Error procesando respuesta del backend (${res.status}): ${text.slice(0, 150)}`);
+    }
+  };
+
+  const fetchSystemStatus = async () => {
+    setCheckingStatus(true);
+    try {
+      const data = await safeFetchJson('/api/status');
+      setStatus(data);
+      if (data.ollama?.available_models) {
+        setModels(data.ollama.available_models);
+        if (data.ollama.current_model) {
+          setActiveModel(data.ollama.current_model);
+        }
+      }
+    } catch (err) {
+      console.warn("Estado del sistema no disponible:", err.message);
+    }
+    setCheckingStatus(false);
+  };
+
+  const fetchMatches = async () => {
+    try {
+      const data = await safeFetchJson('/api/matches');
+      setMatches(data.matches || []);
+    } catch (err) {
+      console.warn("Partidos no disponibles:", err.message);
+    }
+  };
+
+  const fetchUefaSoccerStats = async () => {
+    try {
+      const data = await safeFetchJson('/api/uefa/soccerstats');
+      setUefaData(data);
+    } catch (err) {
+      console.warn("SoccerStats no disponible:", err.message);
+    }
+  };
+
+  const fetchBookmakersOdds = async () => {
+    try {
+      const data = await safeFetchJson('/api/bookmakers/odds');
+      setBookmakersData(data);
+    } catch (err) {
+      console.warn("Cuotas de casas de apuestas no disponibles:", err.message);
+    }
+  };
+
+  // Ejecutar el Pipeline Multi-Agente y Abrir la Ventana Emergente
+  const handleAnalyzeMatch = async (match) => {
+    setIsAnalyzing(true);
+    setAnalyzingMatchId(match.id);
+    setModalMatch(match);
+    setIsModalOpen(true);
+    setActiveAnalysis({
+      partido: match.partido,
+      liga: match.liga,
+      cuota: match.cuota,
+      mercado: match.mercado,
+      home_team_info: match.home_info,
+      away_team_info: match.away_info,
+      torneo_info: match.tournament_info
+    });
+
+    try {
+      const data = await safeFetchJson('/api/analisis-completo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          partido: match.partido,
+          equipo_local: match.local || match.partido?.split(' vs ')[0],
+          equipo_visitante: match.visitante || match.partido?.split(' vs ')[1],
+          liga: match.liga,
+          cuota: match.cuota,
+          mercado: match.mercado,
+          modelo: activeModel
+        })
+      });
+
+      setActiveAnalysis(data);
+    } catch (error) {
+      console.error("Error en pipeline:", error);
+      setActiveAnalysis(prev => ({
+        ...prev,
+        error: error.message,
+        recopilador: {
+          informe_inteligencia: `❌ No se pudo completar el análisis: ${error.message}.\n\nAsegúrate de que el backend esté iniciado en http://localhost:8000.`,
+          fuentes: []
+        },
+        decisor: {
+          a_cual_apostar: "Revisar conexión backend",
+          prediccion: "Análisis Interrumpido",
+          confianza_pct: 0,
+          nivel_confianza: "Error",
+          veredicto_tipo: "DESCONECTADO",
+          razones: ["Fallo de conexión o respuesta no válida."],
+          riesgos: ["Inicia el servidor backend con: python -m uvicorn main:app --port 8000"]
+        }
+      }));
+    }
+
+    setIsAnalyzing(false);
+    setAnalyzingMatchId(null);
+  };
+
+  // Enviar mensaje en la consola de chat
+  const handleSendMessage = async (mensaje, modo) => {
+    const nuevoHistorial = [...mensajes, { rol: 'usuario', texto: mensaje }];
+    setMensajes(nuevoHistorial);
+    setChatCargando(true);
+
+    try {
+      let endpoint = '/api/chat';
+      let body = { mensaje, modelo: activeModel };
+
+      if (modo === 'pipeline') {
+        endpoint = '/api/analisis-completo';
+        body = { partido: mensaje, modelo: activeModel };
+      } else if (modo === 'recopilador') {
+        endpoint = '/api/agente/recopilador';
+        body = { partido_o_consulta: mensaje, modelo: activeModel };
+      }
+
+      const data = await safeFetchJson(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      let respuestaTexto = "";
+      let agenteNombre = "IA Ollama";
+
+      if (modo === 'pipeline') {
+        agenteNombre = "Agente Decisor + Recopilador";
+        if (data.decisor && (data.decisor.a_cual_apostar || data.decisor.prediccion)) {
+          respuestaTexto = `### 🎯 Recomendación: ${data.decisor.a_cual_apostar || data.decisor.prediccion}\n` +
+            `**Confianza:** ${data.decisor.confianza_pct || 80}% (${data.decisor.nivel_confianza || 'Alta'}) | **Veredicto:** ${data.decisor.veredicto_tipo || 'SÓLIDO'}\n\n` +
+            `**Cuota Sugerida:** ${data.decisor.cuota_recomendada || '+115 (2.15)'} | **Valor:** ${data.decisor.valor_esperado_ev || '+12% EV'}\n\n` +
+            (data.decisor.razones && data.decisor.razones.length > 0 ? `#### Razones Clave:\n` + data.decisor.razones.map(r => `- ${r}`).join('\n') + `\n\n` : '') +
+            (data.decisor.riesgos && data.decisor.riesgos.length > 0 ? `#### Riesgos Detectados:\n` + data.decisor.riesgos.map(rk => `- ⚠️ ${rk}`).join('\n') + `\n\n` : '') +
+            (data.decisor.gestion_riesgo ? `**Gestión de Riesgo:** ${data.decisor.gestion_riesgo}\n\n` : '') +
+            `---\n` +
+            `*Fuentes verificadas por DuckDuckGo:* ${data.recopilador?.fuentes?.length || 0} referencias oficiales.`;
+        } else if (data.recopilador?.informe_inteligencia) {
+          respuestaTexto = data.recopilador.informe_inteligencia;
+        } else if (data.respuesta) {
+          respuestaTexto = data.respuesta;
+        } else {
+          respuestaTexto = "Análisis completado. Para pronósticos cuantitativos y dictamen de apuestas, ingresa un cruce directo como **'Cruz Azul vs Monterrey'** o **'Real Madrid vs Bayern Múnich'**.";
+        }
+      } else if (modo === 'recopilador') {
+        agenteNombre = "Agente Recopilador";
+        respuestaTexto = data.informe_inteligencia || data.respuesta || "Información recopilada.";
+      } else {
+        agenteNombre = "IA Analista";
+        respuestaTexto = data.respuesta || data.informe_inteligencia || "Sin respuesta del modelo.";
+      }
+
+      setMensajes([...nuevoHistorial, { rol: 'ia', agente: agenteNombre, modo, texto: respuestaTexto }]);
+    } catch (err) {
+      setMensajes([
+        ...nuevoHistorial,
+        { rol: 'ia', agente: 'Error', texto: `⚠️ ${err.message}` }
+      ]);
+    }
+
+    setChatCargando(false);
+  };
+
+  const handleClearHistory = () => {
+    setMensajes([]);
+  };
+
+  return (
+    <div className="min-h-screen bg-dark-950 text-slate-100 flex flex-col font-sans">
+      
+      {/* Barra de Navegación Principal */}
+      <Navbar
+        status={status}
+        models={models}
+        activeModel={activeModel}
+        onSelectModel={setActiveModel}
+        onRefreshStatus={() => {
+          fetchSystemStatus();
+          fetchMatches();
+          fetchUefaSoccerStats();
+          fetchBookmakersOdds();
+        }}
+        checkingStatus={checkingStatus}
+      />
+
+      {/* Contenedor Central */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        
+        {/* Banner Superior de Métricas en Vivo */}
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <div className="glass-card p-4 rounded-xl border border-slate-800/80 flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <Bot className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-mono text-slate-400 block">Motor IA Activo</span>
+              <span className="text-sm font-bold text-white font-mono truncate block max-w-[130px]">
+                {activeModel}
+              </span>
+            </div>
+          </div>
+
+          <div className="glass-card p-4 rounded-xl border border-slate-800/80 flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <Coins className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-mono text-slate-400 block">DuckDuckGo & Bookmakers</span>
+              <span className="text-sm font-bold text-amber-300 font-mono">Caliente • Pinnacle</span>
+            </div>
+          </div>
+
+          <div className="glass-card p-4 rounded-xl border border-slate-800/80 flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-mono text-slate-400 block">Copas Actuales & Tablas</span>
+              <span className="text-sm font-bold text-cyan-300 font-mono">Champions • Liga MX</span>
+            </div>
+          </div>
+
+          <div className="glass-card p-4 rounded-xl border border-slate-800/80 flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-mono text-slate-400 block">Ventana Emergente</span>
+              <span className="text-sm font-bold text-purple-300 font-mono">Imágenes & Dictamen</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Workspace de Análisis en Vista Normal (Inline) */}
+        {(activeAnalysis || isAnalyzing) && !isModalOpen && (
+          <section>
+            <AgentWorkspace
+              data={activeAnalysis}
+              isLoading={isAnalyzing}
+              onClose={() => setActiveAnalysis(null)}
+            />
+          </section>
+        )}
+
+        {/* Barra de Selección de Vista Principal */}
+        <div className="flex items-center justify-between border-b border-slate-800/80 pb-3 overflow-x-auto gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentView("radar")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold font-display transition-all ${
+                currentView === "radar"
+                  ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/10 text-emerald-300 border border-emerald-500/40 shadow-glow-emerald'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+              }`}
+            >
+              <TrendingUp className="w-4 h-4 text-emerald-400" />
+              <span>Radar Multiliga & Escáner (Liga MX / Champions / Premier)</span>
+            </button>
+
+            <button
+              onClick={() => setCurrentView("bookmakers")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold font-display transition-all ${
+                currentView === "bookmakers"
+                  ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/10 text-amber-300 border border-amber-500/40 shadow-glow-amber'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+              }`}
+            >
+              <Coins className="w-4 h-4 text-amber-400" />
+              <span>Casas de Apuestas (+EV & Momios Caliente/Pinnacle)</span>
+            </button>
+
+            <button
+              onClick={() => setCurrentView("uefa")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold font-display transition-all ${
+                currentView === "uefa"
+                  ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/10 text-cyan-300 border border-cyan-500/40 shadow-glow-cyan'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+              }`}
+            >
+              <Trophy className="w-4 h-4 text-cyan-400" />
+              <span>UEFA SoccerStats Oficial (36 Clubes)</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Cuadrícula Principal: Vista Seleccionada + Consola de Chat */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Panel Izquierdo: Vista Principal */}
+          <div className="lg:col-span-7 xl:col-span-8 space-y-6">
+            {currentView === "radar" && (
+              <MatchList
+                matches={matches}
+                onAnalyzeMatch={handleAnalyzeMatch}
+                analyzingMatchId={analyzingMatchId}
+              />
+            )}
+
+            {currentView === "bookmakers" && (
+              <BookmakersView
+                data={bookmakersData}
+                onAnalyzeMatch={handleAnalyzeMatch}
+                analyzingMatchId={analyzingMatchId}
+              />
+            )}
+
+            {currentView === "uefa" && (
+              <SoccerStatsView
+                data={uefaData}
+                onAnalyzeMatch={handleAnalyzeMatch}
+                analyzingMatchId={analyzingMatchId}
+              />
+            )}
+          </div>
+
+          {/* Panel Derecho: Consola de Chat y Consultas Aisladas */}
+          <div className="lg:col-span-5 xl:col-span-4">
+            <div className="sticky top-24">
+              <ChatConsole
+                activeModel={activeModel}
+                onSendMessage={handleSendMessage}
+                onClearHistory={handleClearHistory}
+                mensajes={mensajes}
+                cargando={chatCargando}
+              />
+            </div>
+          </div>
+
+        </section>
+
+      </main>
+
+      {/* ─── VENTANA EMERGENTE INTERACTIVA CON IMÁGENES, COPAS Y APUESTAS ─── */}
+      <MatchModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        matchData={modalMatch}
+        analysisData={activeAnalysis}
+        isLoading={isAnalyzing}
+        onReAnalyze={handleAnalyzeMatch}
+      />
+
+      {/* Footer */}
+      <footer className="border-t border-slate-900 bg-dark-950 py-6 text-center text-xs text-slate-400">
+        <p>
+          Agentes IA • Conectado a DuckDuckGo Search, SoccerStats, Caliente.mx, Pinnacle & Bet365
+        </p>
+      </footer>
+
+    </div>
+  );
 }
 
-function Overview({ onAnalyze, onAsk, onSelect }) { const featured = signals[0]; return <div className="view-frame"><section className="hero-panel glass-panel"><div className="hero-copy"><p className="eyebrow">LECTURA DE PARTIDO</p><h2>Menos ruido.<br /><em>Mejor contexto.</em></h2><p>Señales explicadas para que entiendas qué cambia antes del silbatazo.</p><div className="hero-actions"><button type="button" className="primary-button" onClick={onAnalyze}>Ver señales <ArrowRight size={17} /></button><button type="button" className="text-button" onClick={onAsk}>Cómo usar el analista <ChevronRight size={17} /></button></div></div><div className="match-orbit" aria-label="Señal destacada: Sparta Praga contra RB Salzburg, confianza 85 por ciento"><div className="orbit-glow" /><span className="orbit-label">SEÑAL DESTACADA</span><div className="teams-line"><Mark code="SPA" tone="blue" /><span>vs</span><Mark code="RBS" tone="lime" /></div><strong>85<span>%</span></strong><small>nivel de confianza</small><button type="button" onClick={() => onSelect(featured)}>Ver contexto <ArrowRight size={15} /></button></div></section><section className="metric-grid" aria-label="Resumen de indicadores"><Metric icon={<CalendarDays />} title="Partidos observados" value="12" detail="durante las próximas 48 h" /><Metric icon={<TrendingUp />} accent="lime" title="Confianza promedio" value="76%" detail="en las señales disponibles" /><Metric icon={<Flame />} accent="coral" title="Señales para revisar" value="4" detail="con contexto suficiente" /></section><section className="summary-lower"><article className="featured-card glass-panel"><div className="section-title"><div><p className="eyebrow">EN EL RADAR</p><h2>La lectura de hoy</h2></div><span className="demo-tag"><Info size={13} />Datos demo</span></div><SignalCard item={featured} onSelect={onSelect} compact /><div className="card-footer"><span><Clock3 size={15} />Actualizado para demostración</span><button type="button" className="text-button" onClick={onAnalyze}>Explorar análisis <ArrowRight size={16} /></button></div></article><article className="quick-card glass-panel"><div className="section-title"><div><p className="eyebrow">EMPIEZA AQUÍ</p><h2>¿Qué quieres revisar?</h2></div></div><QuickAction icon={<ShieldCheck />} title="Entender una señal" detail="Confianza, riesgo y evidencia." onClick={() => onAsk('¿Qué debe tener una señal confiable?')} /><QuickAction icon={<Trophy />} title="Preparar un partido" detail="Consulta contexto y alineaciones." onClick={() => onAsk('¿Qué debo revisar en las alineaciones?')} /></article></section><Disclaimer /></div> }
-function Analysis({ filter, setFilter, shown, onSelect }) { return <div className="view-frame analysis-view"><section className="analysis-intro glass-panel"><div><p className="eyebrow">CENTRO DE SEÑALES</p><h2>Elige con el contexto al frente.</h2><p>Ordenamos las oportunidades de demostración según el nivel de evidencia, no según promesas.</p></div><div className="form-summary"><span>FORMA DE LA JORNADA</span><strong>+14<span>%</span></strong><small>señales en observación</small></div></section><div className="filter-row" aria-label="Filtrar señales"><Filter size={17} />{filters.map((value) => <button key={value} type="button" className={filter === value ? 'is-active' : ''} onClick={() => setFilter(value)} aria-pressed={filter === value}>{value}</button>)}</div><section className="signal-list" aria-label="Señales disponibles"><div className="list-header"><span>{shown.length} señales encontradas</span><span>Confianza <TrendingUp size={15} /></span></div>{shown.map((item) => <SignalCard key={item.id} item={item} onSelect={onSelect} />)}{shown.length === 0 && <div className="empty-state"><Search size={24} /><strong>No hay señales con este filtro</strong><p>Prueba otro nivel de confianza para ver el resto de la jornada demo.</p></div>}</section><Disclaimer demo /></div> }
-function Chat({ query, setQuery, messages, loading, inputRef, send, onPrompt }) { const prompts = ['¿Qué debo vigilar antes del partido?', 'Explícame el nivel de confianza', '¿Qué riesgo puede cambiar una señal?']; return <div className="view-frame consultations-view"><section className="chat-shell glass-panel"><div className="chat-heading"><div className="analyst-avatar"><Zap size={21} /></div><div><p className="eyebrow">ANALISTA LOCAL</p><h2>Pregunta con intención.</h2><p>Qwen 2.5 te ayuda a leer el contexto, riesgos y alineaciones.</p></div><span className="availability"><span />Disponible</span></div><div className="suggestion-row" aria-label="Preguntas sugeridas">{prompts.map((prompt) => <button type="button" key={prompt} onClick={() => onPrompt(prompt)}>{prompt}<ArrowRight size={15} /></button>)}</div><div className="chat-history" aria-live="polite" aria-busy={loading}>{messages.length === 0 ? <div className="empty-chat"><div className="empty-icon"><MessageCircle size={25} /></div><strong>Tu análisis empieza con una pregunta.</strong><p>Prueba una sugerencia o escribe el partido que quieres entender.</p></div> : messages.map((message, index) => <article className={`message ${message.role}`} key={`${message.role}-${index}`}><span>{message.role === 'user' ? 'Tú' : 'Analista IA'}</span><p>{message.text}</p></article>)}{loading && <article className="message assistant loading-message"><span>Analista IA</span><p><i /><i /><i /><b>Revisando el contexto…</b></p></article>}</div><form className="chat-composer" onSubmit={(event) => { event.preventDefault(); send() }}><label htmlFor="chat-query">Tu consulta</label><div className="input-row"><input id="chat-query" ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Ej. ¿Qué debo vigilar en Cruz Azul vs Toluca?" disabled={loading} /><button type="submit" className="send-button" disabled={loading || !query.trim()} aria-label="Enviar consulta"><Send size={18} /></button></div><small>El análisis es informativo; contrasta siempre con fuentes actuales.</small></form></section></div> }
-function SignalCard({ item, onSelect, compact = false }) { const level = item.confidence >= 80 ? 'high' : item.confidence >= 70 ? 'medium' : 'low'; return <article className={`signal-card ${compact ? 'is-compact' : ''}`}><div className="signal-card-main"><div className="league-line"><span>{item.league}</span><span><Clock3 size={14} />{item.kickoff}</span></div><div className="match-row"><div className="team-cluster"><Mark code={item.homeCode} tone="blue" /><strong>{item.home}</strong></div><span className="versus">vs</span><div className="team-cluster"><Mark code={item.awayCode} tone="lime" /><strong>{item.away}</strong></div></div><p className="market-label">{item.market}</p><p className="signal-detail">{item.detail}</p></div><div className="signal-score"><span className={`signal-badge score-${level}`}>{item.signal}</span><strong>{item.confidence}<small>%</small></strong><span>confianza</span><div className="confidence-track" aria-label={`Confianza: ${item.confidence}%`}><i style={{ width: `${item.confidence}%` }} /></div><button type="button" onClick={() => onSelect(item)}>Ver detalle <ArrowRight size={15} /></button></div></article> }
-function Detail({ signal, closeRef, close, ask }) { return <div className="detail-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && close()}><aside className="detail-sheet" role="dialog" aria-modal="true" aria-labelledby="detail-title"><header><div><p className="eyebrow">DETALLE DE LA SEÑAL · DEMO</p><h2 id="detail-title">{signal.home} <span>vs</span> {signal.away}</h2></div><button ref={closeRef} type="button" className="icon-button" onClick={close} aria-label="Cerrar detalle"><X size={20} /></button></header><div className="detail-score"><span className="signal-badge score-high">{signal.signal}</span><strong>{signal.confidence}<small>%</small></strong><p>{signal.market} <b>{signal.odd}</b></p></div><section><h3><BarChart3 size={18} />Por qué aparece</h3><p>{signal.detail}</p><ul>{signal.evidence.map((item) => <li key={item}><Star size={15} />{item}</li>)}</ul></section><section className="risk-section"><h3><CircleAlert size={18} />Riesgo a vigilar</h3><p>{signal.risk}</p></section><section><h3><TrendingUp size={18} />Forma reciente</h3><div className="form-row" aria-label={`Forma reciente: ${signal.form.join(', ')}`}>{signal.form.map((result, index) => <span className={`form-${result}`} key={`${result}-${index}`}>{result}</span>)}</div></section><footer><button type="button" className="primary-button" onClick={ask}><MessageCircle size={18} />Preguntar al analista</button><p><Info size={14} />Señal de demostración, no garantía.</p></footer></aside></div> }
-function Metric({ icon, title, value, detail, accent = 'blue' }) { return <article className={`metric-card accent-${accent}`}><span className="metric-icon">{icon}</span><div><p>{title}</p><strong>{value}</strong><small>{detail}</small></div></article> }
-function Mark({ code, tone }) { return <span className={`team-mark ${tone}`} aria-label={code}>{code}</span> }
-function QuickAction({ icon, title, detail, onClick }) { return <button type="button" className="quick-action" onClick={onClick}>{icon}<span><strong>{title}</strong><small>{detail}</small></span><ChevronRight /></button> }
-function Disclaimer({ demo = false }) { return <p className="disclaimer"><CircleAlert size={16} />{demo ? 'El contenido de esta pantalla es demostrativo y no representa datos en vivo.' : 'Una señal organiza evidencia disponible; no garantiza un resultado deportivo.'}</p> }
-function heading(view) { return view === 'Resumen' ? <>El partido se lee <em>antes</em>.</> : view === 'Análisis' ? <>Señales que merecen <em>mirarse bien</em>.</> : <>Tu pregunta abre el <em>juego</em>.</> }
+export default App;
