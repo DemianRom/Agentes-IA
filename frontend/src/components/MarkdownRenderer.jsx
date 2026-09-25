@@ -1,4 +1,3 @@
-import React from 'react';
 
 /**
  * Renderizador de Markdown ligero y seguro para textos enriquecidos de agentes IA.

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Bot, ChevronRight, Clock, Flame, Play, Search, Sparkles, Target, Trophy, ShieldAlert, Zap } from 'lucide-react';
+import { useState } from 'react';
+import { Bot, ChevronRight, Clock, Search, Sparkles } from 'lucide-react';
 
 export function MatchList({ matches, onAnalyzeMatch, analyzingMatchId }) {
   const [selectedLeague, setSelectedLeague] = useState("Todas");
@@ -39,29 +39,27 @@ export function MatchList({ matches, onAnalyzeMatch, analyzingMatchId }) {
     <div className="space-y-6">
       
       {/* Barra de Análisis Personalizado Rápido */}
-      <div className="glass-panel p-5 rounded-2xl relative overflow-hidden border border-emerald-500/30 shadow-glow-emerald">
+      <section id="match-scanner" className="glass-panel p-5 sm:p-6 rounded-3xl relative overflow-hidden border border-emerald-500/30 shadow-glow-emerald" aria-labelledby="scanner-title">
         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center mb-3">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-emerald-400" />
-            <h2 className="text-base font-bold text-white font-display">
-              Escáner Dinámico Multi-Agente (DuckDuckGo + Copas)
+            <h2 id="scanner-title" className="text-base font-bold text-white font-display">
+              Encuentra tu partido
             </h2>
           </div>
-          <span className="text-[11px] font-mono text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-700/40">
-            DuckDuckGo Live + Ollama
-          </span>
         </div>
         
         <p className="text-xs text-slate-300 mb-4">
-          Ingresa cualquier cruce futbolístico del mundo. El <strong>Agente Recopilador</strong> buscará noticias, bajas médicas y estado de copas en tiempo real vía DuckDuckGo, y el <strong>Agente Decisor</strong> abrirá una <strong>Ventana Emergente Interactiva</strong> con imágenes y dictamen de apuestas.
+          Escribe el cruce que quieres revisar y descubre lo más relevante: forma, contexto, posibles bajas y señales del encuentro.
         </p>
 
         <form onSubmit={handleCustomAnalyze} className="flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-            <input
+            <label htmlFor="custom-match" className="sr-only">Partido a analizar</label><input
+              id="custom-match"
               type="text"
               placeholder="Ej. Cruz Azul vs Monterrey, Real Madrid vs Bayern, Barcelona vs PSG, Arsenal vs City..."
               value={customMatch}
@@ -70,7 +68,8 @@ export function MatchList({ matches, onAnalyzeMatch, analyzingMatchId }) {
             />
           </div>
 
-          <select
+            <label htmlFor="custom-league" className="sr-only">Competencia</label><select
+              id="custom-league"
             value={customLeague}
             onChange={(e) => setCustomLeague(e.target.value)}
             className="bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-emerald-500 font-mono"
@@ -84,14 +83,14 @@ export function MatchList({ matches, onAnalyzeMatch, analyzingMatchId }) {
 
           <button
             type="submit"
-            disabled={!customMatch.trim() || analyzingMatchId === 'custom'}
+            disabled={!customMatch.trim() || String(analyzingMatchId || '').startsWith('custom-')}
             className="px-5 py-2.5 rounded-xl font-display font-bold text-xs uppercase tracking-wider text-slate-950 bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 transition-all flex items-center justify-center gap-2 shadow-glow-emerald disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
           >
             <Bot className="w-4 h-4" />
-            {analyzingMatchId === 'custom' ? 'Analizando...' : 'Escanear Partido'}
+            {String(analyzingMatchId || '').startsWith('custom-') ? 'Analizando...' : 'Escanear partido'}
           </button>
         </form>
-      </div>
+      </section>
 
       {/* Controles de Filtro y Búsqueda */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -116,7 +115,8 @@ export function MatchList({ matches, onAnalyzeMatch, analyzingMatchId }) {
         {/* Buscador de la lista */}
         <div className="relative w-full sm:w-64">
           <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-          <input
+          <label htmlFor="match-filter" className="sr-only">Filtrar partidos</label><input
+            id="match-filter"
             type="text"
             placeholder="Filtrar partidos..."
             value={searchTerm}
@@ -136,12 +136,12 @@ export function MatchList({ matches, onAnalyzeMatch, analyzingMatchId }) {
           return (
             <div
               key={match.id}
-              className="glass-card rounded-2xl p-5 border border-slate-800/80 hover:border-emerald-500/40 transition-all duration-300 hover:shadow-lg relative group flex flex-col justify-between"
+              className="nm-fixture-card rounded-[24px] p-5 border border-slate-800/80 relative group flex flex-col justify-between"
             >
               <div>
                 {/* Cabecera de la Tarjeta */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider font-mono">
                       {match.liga}
                     </span>
@@ -152,24 +152,24 @@ export function MatchList({ matches, onAnalyzeMatch, analyzingMatchId }) {
                     </span>
                   </div>
 
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-700/40">
+                  <span className="shrink-0 text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-700/40">
                     {match.estado}
                   </span>
                 </div>
 
                 {/* Matchup con Escudos Oficiales */}
                 <div className="mb-4">
-                  <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">
+                  <div className="nm-fixture-duel flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80">
                     
                     {/* Local */}
                     <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 p-1 flex items-center justify-center shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 p-1.5 flex items-center justify-center shrink-0 shadow-inner">
                         {homeInfo?.logo && !imgErrors[`${match.id}-home`] ? (
                           <img
                             src={homeInfo.logo}
                             alt={match.local}
                             onError={() => handleImageError(`${match.id}-home`)}
-                            className="max-w-full max-h-full object-contain"
+                            width="32" height="32" loading="lazy" className="max-w-full max-h-full object-contain"
                           />
                         ) : (
                           <span className="text-[10px] font-bold text-emerald-400">
@@ -182,20 +182,20 @@ export function MatchList({ matches, onAnalyzeMatch, analyzingMatchId }) {
                       </span>
                     </div>
 
-                    <span className="text-[11px] font-mono font-bold text-slate-500">VS</span>
+                    <span className="nm-fixture-vs text-[11px] font-mono font-bold text-slate-500">VS</span>
 
                     {/* Visitante */}
                     <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end text-right">
                       <span className="text-xs sm:text-sm font-bold text-white truncate">
                         {match.visitante}
                       </span>
-                      <div className="w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 p-1 flex items-center justify-center shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 p-1.5 flex items-center justify-center shrink-0 shadow-inner">
                         {awayInfo?.logo && !imgErrors[`${match.id}-away`] ? (
                           <img
                             src={awayInfo.logo}
                             alt={match.visitante}
                             onError={() => handleImageError(`${match.id}-away`)}
-                            className="max-w-full max-h-full object-contain"
+                            width="32" height="32" loading="lazy" className="max-w-full max-h-full object-contain"
                           />
                         ) : (
                           <span className="text-[10px] font-bold text-cyan-400">
@@ -209,26 +209,26 @@ export function MatchList({ matches, onAnalyzeMatch, analyzingMatchId }) {
 
                   {/* Estado de Copas / Posición */}
                   {homeInfo?.current_cup_status && (
-                    <div className="mt-2 text-[10px] text-amber-300/90 font-mono bg-amber-950/30 px-2 py-1 rounded-lg border border-amber-800/30 truncate">
-                      {homeInfo.current_cup_status}
+                    <div className="mt-3 text-[10px] text-amber-300/90 font-mono bg-amber-950/30 px-2.5 py-1.5 rounded-lg border border-amber-800/30 truncate">
+                      {homeInfo.current_cup_status.replace(/^🏆\s*/, '')}
                     </div>
                   )}
 
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xs text-slate-400">Mercado sugerido:</span>
+                  <div className="flex items-center gap-2 mt-3">
+                    <span className="text-[10px] font-mono uppercase tracking-wide text-slate-500">Lectura sugerida</span>
                     <span className="text-xs font-semibold text-cyan-300">{match.mercado}</span>
                   </div>
                 </div>
 
                 {/* Métricas clave: Cuota y Confianza */}
-                <div className="grid grid-cols-2 gap-2 mb-4 p-3 rounded-xl bg-slate-950/40 border border-slate-800/60">
+                <div className="nm-fixture-metrics grid grid-cols-2 gap-2 mb-5 p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800/60">
                   <div>
                     <span className="text-[10px] uppercase font-mono text-slate-400 block">Cuota Promedio</span>
                     <span className="text-sm font-bold text-amber-400 font-mono">{match.cuota}</span>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase font-mono text-slate-400 block">Confianza Base</span>
-                    <span className="text-sm font-bold text-emerald-400 font-mono">{match.confianzaBase}</span>
+                    <span className="text-[10px] uppercase font-mono text-slate-400 block">Confianza</span>
+                    <div className="flex items-center gap-2"><span className="text-sm font-bold text-emerald-400 font-mono">{match.confianzaBase}</span><span className="h-1.5 flex-1 max-w-12 rounded-full bg-slate-700 overflow-hidden"><span className="block h-full rounded-full bg-lime-300" style={{ width: match.confianzaBase }} /></span></div>
                   </div>
                 </div>
               </div>
@@ -237,22 +237,22 @@ export function MatchList({ matches, onAnalyzeMatch, analyzingMatchId }) {
               <button
                 onClick={() => onAnalyzeMatch(match)}
                 disabled={isAnalyzing}
-                className={`w-full py-2.5 px-4 rounded-xl text-xs font-display font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                className={`nm-dossier-button w-full sm:w-auto sm:min-w-[310px] px-4 rounded-2xl text-xs font-display font-bold flex items-center text-left transition-all ${
                   isAnalyzing
                     ? 'bg-slate-800 text-slate-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-emerald-600/90 via-teal-600/90 to-emerald-600/90 hover:from-emerald-500 hover:to-teal-500 text-white border border-emerald-400/40 shadow-glow-emerald'
+                    : 'text-white'
                 }`}
               >
                 {isAnalyzing ? (
                   <>
                     <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Navegando DuckDuckGo e IA...</span>
+                    <span>Consultando fuentes e IA...</span>
                   </>
                 ) : (
                   <>
-                    <Bot className="w-3.5 h-3.5 text-white" />
-                    <span>Analizar & Abrir Ventana Emergente</span>
-                    <ChevronRight className="w-3.5 h-3.5 ml-auto text-white/80" />
+                    <span className="nm-dossier-icon"><Bot className="w-4 h-4 text-cyan-200" /></span>
+                    <span className="ml-3 flex flex-col gap-0.5"><span className="tracking-wide text-white">Abrir previa del partido</span><span className="text-[10px] font-normal tracking-normal text-slate-300">Forma, bajas y señales del encuentro</span></span>
+                    <span className="nm-dossier-arrow ml-auto"><ChevronRight className="w-4 h-4" /></span>
                   </>
                 )}
               </button>

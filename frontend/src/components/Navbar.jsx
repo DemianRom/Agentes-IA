@@ -1,88 +1,20 @@
-import React from 'react';
-import { Activity, Bot, Brain, Database, RefreshCw, Search, ShieldCheck, Zap } from 'lucide-react';
+import { RefreshCw, Zap } from 'lucide-react';
 
-export function Navbar({ status, models, activeModel, onSelectModel, onRefreshStatus, checkingStatus }) {
-  const isOnline = status?.ollama?.online;
-
+export function Navbar({ onRefreshStatus, checkingStatus }) {
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-dark-950/80 backdrop-blur-xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        
-        {/* Logo y Branding */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500/20 via-cyan-500/20 to-blue-600/20 border border-emerald-500/40 shadow-glow-emerald">
-            <Zap className="w-5 h-5 text-emerald-400" />
-            <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
-            <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full" />
+    <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-dark-950/75 backdrop-blur-xl">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 rounded-lg bg-white px-3 py-2 text-slate-950">Ir al contenido</a>
+      <div className="max-w-7xl mx-auto h-[64px] px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-cyan-300/30 bg-cyan-300/10">
+            <Zap className="h-[18px] w-[18px] text-cyan-300" aria-hidden="true" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-display font-black text-lg tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-300 to-white">
-                AGENTES·IA
-              </span>
-              <span className="text-[10px] uppercase font-mono font-bold tracking-widest px-2 py-0.5 rounded-full bg-slate-800 text-emerald-400 border border-emerald-500/30">
-                v2.4 Pro
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-400 hidden sm:block">
-              Inteligencia Deportiva Cuantitativa & Apuestas de Valor (+EV)
-            </p>
-          </div>
+          <p className="font-display text-[15px] font-bold tracking-[.11em] text-white">AGENTES<span className="text-cyan-300">·IA</span></p>
+          <span className="hidden sm:inline-flex rounded-full border border-slate-700/70 bg-white/[.03] px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-slate-400">Fútbol</span>
         </div>
-
-        {/* Indicadores de Sistema en Vivo */}
-        <div className="flex items-center gap-2 sm:gap-4">
-          
-          {/* Motor Ollama Selector */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/90 border border-slate-800 text-xs">
-            <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-400 shadow-[0_0_8px_#10b981]' : 'bg-rose-500 shadow-[0_0_8px_#f43f5e]'}`} />
-            <span className="font-medium text-slate-400 hidden md:inline">Ollama:</span>
-            
-            {models && models.length > 0 ? (
-              <select
-                value={activeModel}
-                onChange={(e) => onSelectModel(e.target.value)}
-                className="bg-transparent text-emerald-300 font-mono text-xs font-semibold focus:outline-none cursor-pointer"
-                title="Selecciona el modelo Ollama para inferencia"
-              >
-                {models.map((m) => (
-                  <option key={m} value={m} className="bg-slate-900 text-slate-200">
-                    {m}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <span className="font-mono text-xs text-emerald-300 font-semibold">
-                {activeModel || (isOnline ? 'Conectado' : 'Desconectado')}
-              </span>
-            )}
-          </div>
-
-          {/* DuckDuckGo Live Badge */}
-          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800/80 text-xs text-slate-300">
-            <Search className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="font-medium">DuckDuckGo:</span>
-            <span className="text-cyan-400 font-semibold font-mono">En vivo</span>
-          </div>
-
-          {/* Agentes Activos Badge */}
-          <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/30 border border-emerald-700/30 text-xs text-emerald-300">
-            <Bot className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="font-medium">2 Agentes:</span>
-            <span className="font-bold text-white font-mono">Recopilador + Decisor</span>
-          </div>
-
-          {/* Botón Refrescar Estado */}
-          <button
-            onClick={onRefreshStatus}
-            disabled={checkingStatus}
-            className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 hover:text-white transition-all disabled:opacity-50"
-            title="Refrescar estado de conexión con Ollama"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${checkingStatus ? 'animate-spin text-cyan-400' : ''}`} />
-          </button>
-
-        </div>
+        <button onClick={onRefreshStatus} disabled={checkingStatus} aria-label="Actualizar datos" className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-700/80 bg-slate-900/55 text-slate-300 transition hover:border-cyan-400/55 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50">
+          <RefreshCw className={`h-[18px] w-[18px] ${checkingStatus ? 'animate-spin text-cyan-300' : ''}`} aria-hidden="true" />
+        </button>
       </div>
     </header>
   );

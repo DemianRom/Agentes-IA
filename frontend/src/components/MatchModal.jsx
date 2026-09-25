@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Activity,
   AlertCircle,
@@ -51,6 +51,8 @@ export function MatchModal({
   const [customSearchQuery, setCustomSearchQuery] = useState('');
   const [customSearchResults, setCustomSearchResults] = useState(null);
   const [isSearchingDuck, setIsSearchingDuck] = useState(false);
+  const dialogRef = useRef(null);
+  const lastFocusedElement = useRef(null);
 
   // Escuchar tecla escape para cerrar el modal
   useEffect(() => {
@@ -58,14 +60,25 @@ export function MatchModal({
       if (e.key === 'Escape') {
         onClose();
       }
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusable = dialogRef.current.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
     };
     if (isOpen) {
+      lastFocusedElement.current = document.activeElement;
       window.addEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'hidden';
+      window.setTimeout(() => dialogRef.current?.querySelector('[data-dialog-close]')?.focus(), 0);
     }
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'unset';
+      if (isOpen) lastFocusedElement.current?.focus?.();
     };
   }, [isOpen, onClose]);
 
@@ -146,15 +159,16 @@ export function MatchModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto" role="presentation">
       {/* Backdrop con Blur Dinámico */}
       <div 
-        onClick={onClose}
+        onClick={onClose} aria-hidden="true"
         className="fixed inset-0 bg-slate-950/85 backdrop-blur-md transition-opacity duration-300 animate-fadeIn"
       />
 
       {/* Contenedor Principal de la Ventana Emergente */}
-      <div className="relative w-full max-w-5xl bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-slate-950 border border-slate-700/80 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden z-10 my-auto flex flex-col max-h-[92vh] animate-scaleUp">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="match-dossier-title" className="relative w-full max-w-5xl bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-slate-950 border border-slate-700/80 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden z-10 my-auto flex flex-col max-h-[92vh] animate-scaleUp">
+        <h2 id="match-dossier-title" className="sr-only">Dossier de análisis: {matchData?.partido || analysisData?.partido || 'partido seleccionado'}</h2>
         
         {/* Glow decorativo de fondo */}
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -218,7 +232,7 @@ export function MatchModal({
             <button
               onClick={onClose}
               className="p-1.5 rounded-xl bg-slate-800/80 hover:bg-rose-950/80 hover:text-rose-300 text-slate-400 border border-slate-700 transition-all"
-              title="Cerrar ventana emergente"
+              data-dialog-close aria-label="Cerrar dossier de partido" title="Cerrar dossier de partido"
             >
               <X className="w-5 h-5" />
             </button>
@@ -237,7 +251,7 @@ export function MatchModal({
                     src={homeInfo.logo}
                     alt={homeInfo.name}
                     onError={() => handleImageError(homeInfo.id || 'home')}
-                    className="max-w-full max-h-full object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]"
+                    width="80" height="80" className="max-w-full max-h-full object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]"
                   />
                 ) : (
                   <div className="w-full h-full rounded-xl bg-emerald-950/80 text-emerald-300 flex items-center justify-center font-bold text-xl font-display">
@@ -300,7 +314,7 @@ export function MatchModal({
                     src={awayInfo.logo}
                     alt={awayInfo.name}
                     onError={() => handleImageError(awayInfo.id || 'away')}
-                    className="max-w-full max-h-full object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]"
+                    width="80" height="80" className="max-w-full max-h-full object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]"
                   />
                 ) : (
                   <div className="w-full h-full rounded-xl bg-cyan-950/80 text-cyan-300 flex items-center justify-center font-bold text-xl font-display">
@@ -346,10 +360,10 @@ export function MatchModal({
         </div>
 
         {/* ─── 3. BARRA DE PESTAÑAS DENTRO DE LA VENTANA EMERGENTE ──────────── */}
-        <div className="flex items-center gap-2 px-5 sm:px-7 py-3 border-b border-slate-800 bg-slate-950/70 overflow-x-auto shrink-0">
+        <div className="flex items-center gap-2 px-5 sm:px-7 py-3 border-b border-slate-800 bg-slate-950/70 overflow-x-auto shrink-0" role="tablist" aria-label="Secciones del dossier">
           
           <button
-            onClick={() => setActiveTab('decision')}
+            onClick={() => setActiveTab('decision')} role="tab" aria-selected={activeTab === 'decision'}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold font-display transition-all shrink-0 ${
               activeTab === 'decision'
                 ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/10 text-emerald-300 border border-emerald-500/50 shadow-glow-emerald'
@@ -357,11 +371,11 @@ export function MatchModal({
             }`}
           >
             <Target className="w-4 h-4 text-emerald-400" />
-            <span>🎯 A Cuál Apostar & Pronóstico (+EV)</span>
+            <span>Dictamen y pronóstico</span>
           </button>
 
           <button
-            onClick={() => setActiveTab('players')}
+            onClick={() => setActiveTab('players')} role="tab" aria-selected={activeTab === 'players'}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold font-display transition-all shrink-0 ${
               activeTab === 'players'
                 ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/10 text-cyan-300 border border-cyan-500/50 shadow-glow-cyan'
@@ -369,11 +383,11 @@ export function MatchModal({
             }`}
           >
             <Users className="w-4 h-4 text-cyan-400" />
-            <span>👥 Jugadores, Bajas & Reporte Médico</span>
+            <span>Jugadores y bajas</span>
           </button>
 
           <button
-            onClick={() => setActiveTab('standings')}
+            onClick={() => setActiveTab('standings')} role="tab" aria-selected={activeTab === 'standings'}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold font-display transition-all shrink-0 ${
               activeTab === 'standings'
                 ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/10 text-amber-300 border border-amber-500/50 shadow-glow-amber'
@@ -381,11 +395,11 @@ export function MatchModal({
             }`}
           >
             <Trophy className="w-4 h-4 text-amber-400" />
-            <span>🏆 Clasificación & Copas Actuales</span>
+            <span>Clasificación y copas</span>
           </button>
 
           <button
-            onClick={() => setActiveTab('sources')}
+            onClick={() => setActiveTab('sources')} role="tab" aria-selected={activeTab === 'sources'}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold font-display transition-all shrink-0 ${
               activeTab === 'sources'
                 ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/10 text-purple-300 border border-purple-500/50 shadow-glow-violet'
@@ -393,11 +407,11 @@ export function MatchModal({
             }`}
           >
             <Search className="w-4 h-4 text-purple-400" />
-            <span>🔍 Fuentes Verídicas DuckDuckGo ({fuentes.length})</span>
+            <span>Fuentes DuckDuckGo ({fuentes.length})</span>
           </button>
 
           <button
-            onClick={() => setActiveTab('dossier')}
+            onClick={() => setActiveTab('dossier')} role="tab" aria-selected={activeTab === 'dossier'}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold font-display transition-all shrink-0 ${
               activeTab === 'dossier'
                 ? 'bg-slate-800 text-slate-200 border border-slate-600'
@@ -405,7 +419,7 @@ export function MatchModal({
             }`}
           >
             <FileText className="w-4 h-4 text-slate-400" />
-            <span>🤖 Dossier Completo IA</span>
+            <span>Dossier IA</span>
           </button>
 
         </div>

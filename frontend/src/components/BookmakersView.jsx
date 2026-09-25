@@ -32,23 +32,23 @@ export function BookmakersView({ data, onAnalyzeMatch, analyzingMatchId }) {
           <div>
             <div className="flex items-center gap-2 mb-1.5">
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-400 bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-700/40">
-                Comparador Multi-Bookmaker & +EV
+              Comparativa de cuotas
               </span>
               <span className="text-xs text-slate-400 font-mono">
                 Pinnacle • Caliente.mx • Bet365 • Betfair
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white font-display">
-              Monitor de Cuotas en Vivo & Detección de Valor (+EV)
+              Encuentra cuotas para comparar
             </h2>
             <p className="text-xs text-slate-300 mt-1 max-w-2xl">
-              Compara en tiempo real los momios de las principales casas de apuestas contra la cuota justa del Modelo SÓLIDO. Detecta caídas de línea provocadas por dinero profesional y accede directamente a cada casa con un clic.
+              Revisa distintas cuotas del encuentro y compara la información disponible antes de elegir.
             </p>
           </div>
 
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#10b981]" />
-            <span className="text-slate-300 font-medium">4 Casas Conectadas</span>
+            <span className="text-slate-300 font-medium">Opciones disponibles</span>
           </div>
         </div>
 
@@ -92,7 +92,7 @@ export function BookmakersView({ data, onAnalyzeMatch, analyzingMatchId }) {
           <div className="flex items-center gap-2">
             <Scale className="w-4 h-4 text-emerald-400" />
             <h3 className="text-sm font-bold font-display text-white">
-              Oportunidades de Inversión con Valor Matemático (+EV)
+              Señales con valor potencial (+EV)
             </h3>
           </div>
           <span className="text-xs text-slate-400 font-mono">

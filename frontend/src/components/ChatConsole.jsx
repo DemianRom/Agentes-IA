@@ -1,16 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Brain, RefreshCw, Send, Sparkles, Trash2, User, Zap } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Bot, Send, Sparkles, Trash2, User } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
 
-export function ChatConsole({ activeModel, onSendMessage, onClearHistory, mensajes, cargando }) {
+export function ChatConsole({ onSendMessage, onClearHistory, mensajes, cargando }) {
   const [inputMessage, setInputMessage] = useState("");
-  const [modo, setModo] = useState("chat"); // "chat" (Rápido + DuckDuckGo) | "pipeline" | "recopilador"
+  const modo = "chat";
   const messagesEndRef = useRef(null);
 
   const quickPrompts = [
-    { label: "🏥 Bajas Cruz Azul vs Monterrey", query: "Bajas, lesiones y posibles alineaciones para Cruz Azul vs Monterrey" },
-    { label: "🏆 Real Madrid vs Bayern", query: "Real Madrid vs Bayern Múnich análisis de partido y pronóstico" },
-    { label: "⚡ Arsenal vs Man City", query: "Arsenal vs Manchester City alineaciones y pronóstico de goles" },
+    { label: "Bajas · Cruz Azul vs Monterrey", query: "Bajas, lesiones y posibles alineaciones para Cruz Azul vs Monterrey" },
+    { label: "Contexto · Real Madrid vs Bayern", query: "Real Madrid vs Bayern Múnich análisis de partido y pronóstico" },
+    { label: "Alineaciones · Arsenal vs Man City", query: "Arsenal vs Manchester City alineaciones y pronóstico de goles" },
   ];
 
   const scrollToBottom = () => {
@@ -33,7 +33,7 @@ export function ChatConsole({ activeModel, onSendMessage, onClearHistory, mensaj
   };
 
   return (
-    <div className="glass-panel rounded-2xl border border-slate-800 flex flex-col h-[650px] shadow-xl overflow-hidden">
+    <section aria-label="Consola de consulta deportiva" className="glass-panel rounded-3xl border border-slate-800 flex flex-col h-[650px] shadow-xl overflow-hidden">
       
       {/* Cabecera del Chat */}
       <div className="p-4 border-b border-slate-800 bg-slate-900/60 flex items-center justify-between">
@@ -42,61 +42,21 @@ export function ChatConsole({ activeModel, onSendMessage, onClearHistory, mensaj
             <Bot className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="text-sm font-bold font-display text-white">
-              Consola de Consulta Deportiva
-            </h3>
-            <span className="text-[10px] text-slate-400 font-mono">
-              Modelo: <strong className="text-emerald-400">{activeModel || 'Ollama'}</strong>
-            </span>
+            <h3 className="text-base font-bold font-display text-white">Analista local</h3>
           </div>
         </div>
 
         <button
           onClick={onClearHistory}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-all"
-          title="Limpiar historial de chat"
+          aria-label="Limpiar historial de chat"
+          className="h-10 w-10 p-1.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-all"
         >
           <Trash2 className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Selector de Modo del Agente */}
-      <div className="px-4 py-2 bg-slate-950/40 border-b border-slate-800 flex items-center gap-2 text-xs">
-        <span className="text-slate-400 text-[11px] font-mono">Modo:</span>
-        <button
-          onClick={() => setModo("pipeline")}
-          className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${
-            modo === "pipeline"
-              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-              : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          2 Agentes (Completo)
-        </button>
-        <button
-          onClick={() => setModo("recopilador")}
-          className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${
-            modo === "recopilador"
-              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-              : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          DuckDuckGo + Citas
-        </button>
-        <button
-          onClick={() => setModo("chat")}
-          className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${
-            modo === "chat"
-              ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
-              : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          Chat Libre Ollama
-        </button>
-      </div>
-
       {/* Historial de Mensajes */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-4">
+      <div className="flex-1 p-4 overflow-y-auto space-y-4" aria-live="polite" aria-busy={cargando}>
         {mensajes.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
             <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 text-emerald-400">
@@ -117,7 +77,7 @@ export function ChatConsole({ activeModel, onSendMessage, onClearHistory, mensaj
                 <button
                   key={idx}
                   onClick={() => handleQuickPrompt(qp.query)}
-                  className="w-full text-left p-2 rounded-xl bg-slate-900/60 hover:bg-slate-800 border border-slate-800 text-[11px] text-slate-300 hover:text-emerald-300 transition-all truncate"
+                  className="w-full min-h-0 text-left p-2.5 rounded-xl bg-slate-900/60 hover:bg-slate-800 border border-slate-800 text-[11px] text-slate-300 hover:text-emerald-300 transition-all"
                 >
                   {qp.label}
                 </button>
@@ -173,7 +133,7 @@ export function ChatConsole({ activeModel, onSendMessage, onClearHistory, mensaj
             </div>
             <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl rounded-bl-none text-xs text-slate-400 flex items-center gap-2">
               <div className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-              <span>Procesando consulta deportiva con {activeModel || 'Ollama'}...</span>
+              <span>Preparando la respuesta...</span>
             </div>
           </div>
         )}
@@ -183,22 +143,25 @@ export function ChatConsole({ activeModel, onSendMessage, onClearHistory, mensaj
 
       {/* Input de Mensajes */}
       <form onSubmit={handleSubmit} className="p-3 bg-slate-900/80 border-t border-slate-800 flex gap-2">
+        <label htmlFor="sports-query" className="sr-only">Consulta deportiva</label>
         <input
+          id="sports-query"
           type="text"
           placeholder="Escribe tu consulta deportiva..."
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
-          className="flex-1 bg-slate-950/80 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+          className="glass-input flex-1 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
         />
         <button
           type="submit"
           disabled={!inputMessage.trim() || cargando}
-          className="p-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-glow-emerald"
+          aria-label="Enviar consulta"
+          className="h-11 w-11 p-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-glow-emerald"
         >
           <Send className="w-4 h-4" />
         </button>
       </form>
 
-    </div>
+    </section>
   );
 }

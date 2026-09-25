@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { MatchList } from './components/MatchList';
 import { SoccerStatsView } from './components/SoccerStatsView';
@@ -6,7 +6,7 @@ import { BookmakersView } from './components/BookmakersView';
 import { AgentWorkspace } from './components/AgentWorkspace';
 import { ChatConsole } from './components/ChatConsole';
 import { MatchModal } from './components/MatchModal';
-import { Activity, BarChart3, Bot, Brain, Coins, Database, ShieldCheck, Sparkles, TrendingUp, Trophy } from 'lucide-react';
+import { ArrowRight, Coins, Radar, Sparkles, Target, Trophy } from 'lucide-react';
 
 function App() {
   const [status, setStatus] = useState(null);
@@ -16,6 +16,7 @@ function App() {
   const [matches, setMatches] = useState([]);
   const [uefaData, setUefaData] = useState(null);
   const [bookmakersData, setBookmakersData] = useState(null);
+  const [heroImageErrors, setHeroImageErrors] = useState({});
   const [currentView, setCurrentView] = useState("radar"); // "radar" | "bookmakers" | "uefa"
   
   // Estado del Workspace y Modal de Análisis
@@ -46,8 +47,8 @@ function App() {
     }
     try {
       return JSON.parse(text);
-    } catch (e) {
-      throw new Error(`Error procesando respuesta del backend (${res.status}): ${text.slice(0, 150)}`);
+    } catch {
+      throw new Error(`Error procesando respuesta del backend (${res.status}): ${text.slice(0, 150)}`, { cause: text });
     }
   };
 
@@ -220,8 +221,14 @@ function App() {
     setMensajes([]);
   };
 
+  const featuredMatch = matches[0];
+  const showRadar = () => {
+    setCurrentView('radar');
+    window.setTimeout(() => document.getElementById('match-scanner')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+  };
+
   return (
-    <div className="min-h-screen bg-dark-950 text-slate-100 flex flex-col font-sans">
+      <div className="night-match min-h-[100dvh] bg-dark-950 text-slate-100 flex flex-col font-sans">
       
       {/* Barra de Navegación Principal */}
       <Navbar
@@ -239,50 +246,60 @@ function App() {
       />
 
       {/* Contenedor Central */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        
-        {/* Banner Superior de Métricas en Vivo */}
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-          <div className="glass-card p-4 rounded-xl border border-slate-800/80 flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <Bot className="w-5 h-5" />
+      <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
+        <section className="nm-football-hero relative overflow-hidden rounded-[28px] border border-slate-700/70 bg-gradient-to-br from-[#132347] via-[#0d1931] to-[#08111f] px-6 py-8 sm:p-10 lg:p-12 shadow-[0_22px_60px_rgba(0,0,0,.24)]">
+          <div className="nm-pitch" aria-hidden="true" />
+          <div className="pointer-events-none absolute -right-24 -top-28 h-96 w-96 rounded-full border border-cyan-300/10 bg-cyan-400/5 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-40 left-1/3 h-72 w-72 rounded-full bg-lime-300/5 blur-3xl" />
+          <div className="relative grid gap-8 lg:grid-cols-[1.1fr_.9fr] lg:items-center">
+            <div className="max-w-xl">
+              <p className="nm-eyebrow flex items-center gap-2"><Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> Noche de partido</p>
+              <h1 className="mt-3 text-4xl font-bold leading-[1.04] tracking-tight text-white sm:text-5xl [text-wrap:balance]">Haz que cada partido tenga más sentido.</h1>
+              <p className="mt-4 max-w-lg text-base leading-7 text-slate-300">Revisa el panorama, encuentra tendencias y llega al partido con una lectura más completa de lo que está en juego.</p>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <button onClick={showRadar} className="inline-flex items-center justify-center gap-2 rounded-xl bg-lime-300 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-lime-200">
+                  Explorar partidos <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button onClick={() => setCurrentView('bookmakers')} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-500/50 bg-slate-950/25 px-5 py-3 text-sm font-semibold text-white transition hover:border-cyan-300/60 hover:bg-slate-900/50">
+                  Ver cuotas <Coins className="h-4 w-4 text-amber-300" aria-hidden="true" />
+                </button>
+              </div>
+              <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-300">
+                <span className="inline-flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-lime-300" />Partidos destacados</span>
+                <span className="inline-flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />Cuotas para comparar</span>
+                <span className="inline-flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-violet-300" />Contexto del encuentro</span>
+              </div>
             </div>
-            <div>
-              <span className="text-[10px] uppercase font-mono text-slate-400 block">Motor IA Activo</span>
-              <span className="text-sm font-bold text-white font-mono truncate block max-w-[130px]">
-                {activeModel}
-              </span>
-            </div>
-          </div>
 
-          <div className="glass-card p-4 rounded-xl border border-slate-800/80 flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              <Coins className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-[10px] uppercase font-mono text-slate-400 block">DuckDuckGo & Bookmakers</span>
-              <span className="text-sm font-bold text-amber-300 font-mono">Caliente • Pinnacle</span>
-            </div>
-          </div>
-
-          <div className="glass-card p-4 rounded-xl border border-slate-800/80 flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-[10px] uppercase font-mono text-slate-400 block">Copas Actuales & Tablas</span>
-              <span className="text-sm font-bold text-cyan-300 font-mono">Champions • Liga MX</span>
-            </div>
-          </div>
-
-          <div className="glass-card p-4 rounded-xl border border-slate-800/80 flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-[10px] uppercase font-mono text-slate-400 block">Ventana Emergente</span>
-              <span className="text-sm font-bold text-purple-300 font-mono">Imágenes & Dictamen</span>
-            </div>
+            <article className="nm-match-card relative mx-auto w-full max-w-md overflow-hidden rounded-[30px] p-5 sm:p-6">
+              <div className="nm-match-card-glow" aria-hidden="true" />
+              <div className="relative">
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[.06] px-3 py-1.5 text-[10px] font-mono font-semibold uppercase tracking-[.14em] text-slate-300"><span className="h-1.5 w-1.5 rounded-full bg-lime-300" /> En la mira</span>
+                  <Target className="h-5 w-5 text-lime-300" aria-hidden="true" />
+                </div>
+                <p className="mt-5 text-center text-[11px] font-semibold uppercase tracking-[.16em] text-cyan-300">{featuredMatch?.liga || 'Tu próxima jugada'}</p>
+                <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                  <div className="min-w-0 text-center">
+                    <div className="nm-team-orb mx-auto">
+                      {featuredMatch?.home_info?.logo && !heroImageErrors.home ? <img src={featuredMatch.home_info.logo} alt="" onError={() => setHeroImageErrors((previous) => ({ ...previous, home: true }))} /> : <span>{(featuredMatch?.local || 'A').slice(0, 2)}</span>}
+                    </div>
+                    <p className="mt-2 truncate text-sm font-bold text-white sm:text-base">{featuredMatch?.local || 'Elige'}</p>
+                  </div>
+                  <div className="flex flex-col items-center gap-2"><span className="nm-versus">VS</span><span className="text-[10px] font-mono text-slate-400">{featuredMatch?.fecha || 'Próximamente'}</span></div>
+                  <div className="min-w-0 text-center">
+                    <div className="nm-team-orb nm-team-orb-away mx-auto">
+                      {featuredMatch?.away_info?.logo && !heroImageErrors.away ? <img src={featuredMatch.away_info.logo} alt="" onError={() => setHeroImageErrors((previous) => ({ ...previous, away: true }))} /> : <span>{(featuredMatch?.visitante || 'P').slice(0, 2)}</span>}
+                    </div>
+                    <p className="mt-2 truncate text-sm font-bold text-white sm:text-base">{featuredMatch?.visitante || 'un partido'}</p>
+                  </div>
+                </div>
+                <div className="mt-5 rounded-2xl border border-white/10 bg-slate-950/35 p-3 backdrop-blur-xl">
+                  <div className="flex items-center justify-between gap-3"><div className="min-w-0"><p className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Lectura destacada</p><p className="mt-1 truncate text-sm font-semibold text-amber-300">{featuredMatch?.mercado || 'Explora el encuentro'}</p></div><div className="shrink-0 rounded-xl border border-lime-300/25 bg-lime-300/10 px-3 py-2 text-center"><p className="text-[9px] uppercase tracking-wide text-lime-200">Señal</p><p className="font-mono text-lg font-bold text-lime-300">{featuredMatch?.confianzaBase || '—'}</p></div></div>
+                  <button onClick={showRadar} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white/[.08] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-white/[.14]">Ver previa del partido <ArrowRight className="h-4 w-4 text-lime-300" aria-hidden="true" /></button>
+                </div>
+              </div>
+            </article>
           </div>
         </section>
 
@@ -298,22 +315,24 @@ function App() {
         )}
 
         {/* Barra de Selección de Vista Principal */}
-        <div className="flex items-center justify-between border-b border-slate-800/80 pb-3 overflow-x-auto gap-2">
-          <div className="flex items-center gap-2">
+        <nav aria-label="Vistas de inteligencia" className="glass-panel rounded-2xl p-2 flex items-center overflow-x-auto gap-2">
+          <div className="flex items-center gap-2 min-w-max" role="tablist">
             <button
               onClick={() => setCurrentView("radar")}
+              role="tab" aria-selected={currentView === "radar"}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold font-display transition-all ${
                 currentView === "radar"
                   ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/10 text-emerald-300 border border-emerald-500/40 shadow-glow-emerald'
                   : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
               }`}
             >
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
-              <span>Radar Multiliga & Escáner (Liga MX / Champions / Premier)</span>
+              <Radar className="w-4 h-4 text-emerald-400" />
+              <span>Radar</span>
             </button>
 
             <button
               onClick={() => setCurrentView("bookmakers")}
+              role="tab" aria-selected={currentView === "bookmakers"}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold font-display transition-all ${
                 currentView === "bookmakers"
                   ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/10 text-amber-300 border border-amber-500/40 shadow-glow-amber'
@@ -321,11 +340,12 @@ function App() {
               }`}
             >
               <Coins className="w-4 h-4 text-amber-400" />
-              <span>Casas de Apuestas (+EV & Momios Caliente/Pinnacle)</span>
+              <span>Cuotas</span>
             </button>
 
             <button
               onClick={() => setCurrentView("uefa")}
+              role="tab" aria-selected={currentView === "uefa"}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold font-display transition-all ${
                 currentView === "uefa"
                   ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/10 text-cyan-300 border border-cyan-500/40 shadow-glow-cyan'
@@ -333,10 +353,10 @@ function App() {
               }`}
             >
               <Trophy className="w-4 h-4 text-cyan-400" />
-              <span>UEFA SoccerStats Oficial (36 Clubes)</span>
+              <span>Estadísticas</span>
             </button>
           </div>
-        </div>
+        </nav>
 
         {/* Cuadrícula Principal: Vista Seleccionada + Consola de Chat */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -372,7 +392,6 @@ function App() {
           <div className="lg:col-span-5 xl:col-span-4">
             <div className="sticky top-24">
               <ChatConsole
-                activeModel={activeModel}
                 onSendMessage={handleSendMessage}
                 onClearHistory={handleClearHistory}
                 mensajes={mensajes}
@@ -396,9 +415,9 @@ function App() {
       />
 
       {/* Footer */}
-      <footer className="border-t border-slate-900 bg-dark-950 py-6 text-center text-xs text-slate-400">
+      <footer className="border-t border-slate-800/80 bg-dark-950/80 py-6 text-center text-xs text-slate-400">
         <p>
-          Agentes IA • Conectado a DuckDuckGo Search, SoccerStats, Caliente.mx, Pinnacle & Bet365
+          Agentes IA · Una guía para explorar el contexto deportivo. Revisa siempre la información más reciente antes de tomar una decisión.
         </p>
       </footer>
 

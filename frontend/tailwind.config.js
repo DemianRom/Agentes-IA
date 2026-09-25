@@ -8,30 +8,30 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        display: ['Outfit', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'monospace'],
+        sans: ['"Fira Sans"', 'sans-serif'],
+        display: ['"Fira Sans"', 'sans-serif'],
+        mono: ['"Fira Code"', 'monospace'],
       },
       colors: {
         dark: {
-          950: '#070a10',
-          900: '#0b0f19',
-          850: '#101625',
-          800: '#151c2e',
-          700: '#1e293b',
-          600: '#334155',
+          950: '#050814',
+          900: '#090f20',
+          850: '#10182b',
+          800: '#16213a',
+          700: '#273554',
+          600: '#445476',
         },
         brand: {
-          emerald: '#10b981',
-          cyan: '#06b6d4',
-          violet: '#8b5cf6',
-          amber: '#f59e0b',
+          emerald: '#b8f35a',
+          cyan: '#61a5ff',
+          violet: '#9d8cff',
+          amber: '#f5c66c',
           rose: '#f43f5e',
         }
       },
       boxShadow: {
-        'glow-emerald': '0 0 25px -5px rgba(16, 185, 129, 0.3)',
-        'glow-cyan': '0 0 25px -5px rgba(6, 182, 212, 0.3)',
+        'glow-emerald': '0 14px 36px -18px rgba(184, 243, 90, 0.48)',
+        'glow-cyan': '0 14px 36px -18px rgba(97, 165, 255, 0.42)',
         'glow-violet': '0 0 25px -5px rgba(139, 92, 246, 0.3)',
         'glow-amber': '0 0 25px -5px rgba(245, 158, 11, 0.3)',
       },

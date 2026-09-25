@@ -45,7 +45,7 @@ export function SoccerStatsView({ data, onAnalyzeMatch, analyzingMatchId }) {
           <div>
             <div className="flex items-center gap-2 mb-1.5">
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-400 bg-cyan-950/80 px-2.5 py-0.5 rounded-full border border-cyan-700/40">
-                Fuente Cuantitativa Oficial
+                Panorama de la competición
               </span>
               <a 
                 href="https://www.soccerstats.com/leagueview.asp?league=uefa"
@@ -58,16 +58,16 @@ export function SoccerStatsView({ data, onAnalyzeMatch, analyzingMatchId }) {
               </a>
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white font-display">
-              UEFA Champions League — Fase de Liga (Formato Suizo • 36 Equipos)
+              Champions League
             </h2>
             <p className="text-xs text-slate-300 mt-1 max-w-2xl">
-              Datos cuantitativos en vivo: 144 partidos de calendario, 18 encuentros disputados en Jornada 1, métricas avanzadas de gol y fixtures de Jornada 2 listos para inferencia multi-agente.
+              Consulta partidos, posiciones y tendencias para llegar al encuentro con mejor contexto.
             </p>
           </div>
 
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#10b981]" />
-            <span className="text-slate-300 font-medium">36 Clubes Indexados</span>
+            <span className="text-slate-300 font-medium">Todos los equipos</span>
           </div>
         </div>
 
