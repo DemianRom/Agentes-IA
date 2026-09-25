@@ -1,18 +1,15 @@
-import google.generativeai as genai
-import os
-from dotenv import load_dotenv
+import requests
 
-# Cargar la llave
-load_dotenv()
-api_key = os.getenv("GOOGLE_API_KEY")
+MODEL_NAME = "qwen2.5:1.5b"
 
-if not api_key:
-    print("❌ No se encontró la GOOGLE_API_KEY en el archivo .env")
-else:
-    print("✅ Llave cargada. Consultando a Google los modelos disponibles...\n")
-    genai.configure(api_key=api_key)
-    
-    # Listar los modelos que soportan generación de texto (chat)
-    for m in genai.list_models():
-        if 'generateContent' in m.supported_generation_methods:
-            print(f"👉 {m.name}")
+try:
+    response = requests.get("http://127.0.0.1:11434/api/tags", timeout=10)
+    response.raise_for_status()
+    models = {model["name"] for model in response.json().get("models", [])}
+
+    if MODEL_NAME in models:
+        print(f"OK: Ollama esta disponible y {MODEL_NAME} esta descargado.")
+    else:
+        print(f"ERROR: No se encontró {MODEL_NAME}. Ejecuta: ollama pull {MODEL_NAME}")
+except requests.RequestException as error:
+    print(f"ERROR: No se pudo conectar con Ollama: {error}")

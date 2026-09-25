@@ -1,12 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from langchain_google_genai import ChatGoogleGenerativeAI
-from dotenv import load_dotenv
-import os
-
-# Carga las variables del archivo .env al entorno de Python
-load_dotenv()
+from langchain_ollama import ChatOllama
 
 app = FastAPI()
 
@@ -19,7 +14,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-llm = ChatGoogleGenerativeAI(model="gemini-3.6-flash")
+llm = ChatOllama(
+    model="qwen2.5:1.5b",
+    base_url="http://127.0.0.1:11434",
+    temperature=0.2,
+)
 
 class ChatRequest(BaseModel):
     mensaje: str

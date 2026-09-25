@@ -1,129 +1,34 @@
-import React, { useState } from 'react';
+import { useEffect, useRef, useState } from 'react'
+import { ArrowRight, BarChart3, CalendarDays, ChevronRight, CircleAlert, Clock3, Filter, Flame, Home, Info, MessageCircle, Search, Send, ShieldCheck, Sparkles, Star, TrendingUp, Trophy, X, Zap } from 'lucide-react'
+import './App.css'
 
-function App() {
-  const [chatQuery, setChatQuery] = useState("");
-  const [mensajes, setMensajes] = useState([]);
-  const [cargando, setCargando] = useState(false);
+const signals = [
+  { id: 'sparta', home: 'Sparta Praga', away: 'RB Salzburg', homeCode: 'SPA', awayCode: 'RBS', league: 'Champions League', kickoff: 'Hoy · 14:00', market: 'Local / Más de 2.5 goles', odd: '+110', confidence: 85, signal: 'Alta convicción', detail: 'Localía fuerte y tendencia ofensiva consistente.', form: ['V', 'V', 'E', 'V', 'V'], risk: 'Salzburg llega con transición ofensiva peligrosa.', evidence: ['Sparta anotó en 8 de sus últimos 9 partidos locales.', 'Ambos equipos superan 1.6 goles esperados en su muestra reciente.'] },
+  { id: 'cruz', home: 'Cruz Azul', away: 'Toluca', homeCode: 'CAZ', awayCode: 'TOL', league: 'Liga MX', kickoff: 'Mañana · 20:00', market: 'Ambos equipos anotan', odd: '-105', confidence: 74, signal: 'Señal favorable', detail: 'Dos ataques productivos; confirmar alineaciones.', form: ['V', 'E', 'V', 'D', 'V'], risk: 'La señal cambia si falta el delantero titular.', evidence: ['Los dos equipos marcaron en 4 de sus últimos 5 encuentros.', 'Toluca promedia 1.8 goles por partido como visitante.'] },
+  { id: 'arsenal', home: 'Arsenal', away: 'Napoli', homeCode: 'ARS', awayCode: 'NAP', league: 'Champions League', kickoff: 'Jue · 13:45', market: 'Arsenal empate no acción', odd: '-120', confidence: 68, signal: 'En observación', detail: 'Ventaja local, con riesgo por rotación de plantilla.', form: ['E', 'V', 'V', 'D', 'E'], risk: 'Revisar la convocatoria antes del inicio.', evidence: ['Arsenal no perdió 7 de sus últimas 8 localías.', 'La disponibilidad de titulares define el nivel de confianza.'] },
+]
+const nav = [{ label: 'Resumen', icon: Home }, { label: 'Análisis', icon: BarChart3 }, { label: 'Consultas', icon: MessageCircle }]
+const filters = ['Todas', 'Alta convicción', 'Señal favorable', 'En observación']
 
-  const mockTopJugadas = [
-    { id: 1, partido: "Sparta Praga vs RB Salzburg", liga: "Champions League", cuota: "+110", confianza: "85%", prediccion: "Local / Over 2.5" }
-  ];
-
-  const enviarMensaje = async () => {
-    if (!chatQuery.trim()) return;
-    
-    const historialNuevo = [...mensajes, { rol: 'usuario', texto: chatQuery }];
-    setMensajes(historialNuevo);
-    setChatQuery("");
-    setCargando(true);
-
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mensaje: chatQuery })
-      });
-      
-      const data = await response.json();
-      console.log("Respuesta en crudo:", data.respuesta);
-
-      let textoLimpio = "";
-      
-      try {
-        // Convertimos la estructura de bloques a un objeto de JavaScript
-        const bloques = typeof data.respuesta === 'string' ? JSON.parse(data.respuesta) : data.respuesta;
-        
-        // Si es un arreglo y tiene la propiedad "text", extraemos solo el texto
-        if (Array.isArray(bloques) && bloques[0].text) {
-          textoLimpio = bloques[0].text;
-        } else {
-          textoLimpio = data.respuesta; // Por si acaso manda texto normal
-        }
-      } catch (e) {
-        // Si no era un JSON, asumimos que ya era texto limpio
-        textoLimpio = data.respuesta;
-      }
-
-      setMensajes([...historialNuevo, { rol: 'ia', texto: textoLimpio }]);
-    } catch (error) {
-      console.error("Error:", error);
-      setMensajes([...historialNuevo, { rol: 'ia', texto: "Error de conexión con el servidor." }]);
-    }
-    
-    setCargando(false);
-  };
-
-  return (
-    <div className="flex h-screen bg-gray-100 font-sans">
-      {/* Panel Central */}
-      <div className="flex-1 p-8">
-        <h1 className="text-3xl font-bold mb-6">Panel de Control: Top Jugadas</h1>
-        <div className="bg-white rounded-lg shadow p-6">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b">
-                <th className="pb-3 text-gray-600">Partido</th>
-                <th className="pb-3 text-gray-600">Liga</th>
-                <th className="pb-3 text-gray-600">Predicción</th>
-                <th className="pb-3 text-gray-600">Cuota</th>
-                <th className="pb-3 text-gray-600">Confianza IA</th>
-              </tr>
-            </thead>
-            <tbody>
-              {mockTopJugadas.map((jugada) => (
-                <tr key={jugada.id} className="border-b hover:bg-gray-50">
-                  <td className="py-4 font-medium">{jugada.partido}</td>
-                  <td className="py-4">{jugada.liga}</td>
-                  <td className="py-4 text-blue-600 font-semibold">{jugada.prediccion}</td>
-                  <td className="py-4">{jugada.cuota}</td>
-                  <td className="py-4 text-green-600 font-bold">{jugada.confianza}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Panel Lateral - Chat */}
-      <div className="w-1/3 bg-white border-l p-6 flex flex-col">
-        <h2 className="text-xl font-bold mb-4 text-gray-800">Consulta de Agente</h2>
-        <div className="flex-1 bg-gray-50 rounded p-4 mb-4 overflow-y-auto border space-y-3">
-          <p className="text-sm text-gray-500 italic text-center mb-4">Sesión independiente iniciada.</p>
-          
-          {mensajes.map((msg, index) => (
-            <div key={index} className={`p-3 rounded-lg text-sm w-4/5 ${msg.rol === 'usuario' ? 'bg-blue-100 ml-auto' : 'bg-white border mr-auto'}`}>
-              <span className="font-bold block mb-1">{msg.rol === 'usuario' ? 'Tú' : 'IA Analista'}</span>
-              {msg.texto}
-            </div>
-          ))}
-          
-          {cargando && (
-            <div className="text-sm text-gray-500 italic bg-white border p-3 rounded-lg w-4/5 mr-auto">
-              Analizando...
-            </div>
-          )}
-        </div>
-
-        <div className="flex gap-2">
-          <input 
-            type="text" 
-            placeholder="Ej. Alineaciones de Cruz Azul..." 
-            className="flex-1 border rounded p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-            value={chatQuery}
-            onChange={(e) => setChatQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && enviarMensaje()}
-          />
-          <button 
-            onClick={enviarMensaje}
-            disabled={cargando}
-            className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-bold hover:bg-blue-700 disabled:opacity-50"
-          >
-            Enviar
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+export default function App() {
+  const [view, setView] = useState('Resumen'); const [filter, setFilter] = useState('Todas'); const [selected, setSelected] = useState(null)
+  const [query, setQuery] = useState(''); const [messages, setMessages] = useState([]); const [loading, setLoading] = useState(false)
+  const inputRef = useRef(null); const closeRef = useRef(null); const mainRef = useRef(null)
+  useEffect(() => { mainRef.current?.focus() }, [view])
+  useEffect(() => { if (!selected) return undefined; closeRef.current?.focus(); const escape = (event) => event.key === 'Escape' && setSelected(null); window.addEventListener('keydown', escape); return () => window.removeEventListener('keydown', escape) }, [selected])
+  const openChat = (prompt = '') => { setView('Consultas'); if (prompt) setQuery(prompt); requestAnimationFrame(() => inputRef.current?.focus()) }
+  const send = async () => { const question = query.trim(); if (!question || loading) return; const next = [...messages, { role: 'user', text: question }]; setMessages(next); setQuery(''); setLoading(true); try { const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mensaje: question }) }); const data = await response.json(); if (!response.ok) throw new Error(); setMessages([...next, { role: 'assistant', text: String(data.respuesta ?? 'No hubo respuesta disponible.') }]) } catch { setMessages([...next, { role: 'assistant', text: 'No pudimos consultar al analista. Revisa que el servicio local esté activo e intenta nuevamente.' }]) } finally { setLoading(false) } }
+  const shown = filter === 'Todas' ? signals : signals.filter((signal) => signal.signal === filter)
+  return <div className="app-shell"><a className="skip-link" href="#main-content">Saltar al contenido</a><aside className="sidebar" aria-label="Navegación principal"><div className="brand"><span className="brand-mark" aria-hidden="true"><Sparkles size={19} /></span><span>Agentes <b>IA</b></span></div><nav className="nav-list">{nav.map(({ label, icon: Icon }) => <button key={label} type="button" className={`nav-item ${view === label ? 'is-active' : ''}`} onClick={() => setView(label)} aria-current={view === label ? 'page' : undefined}><Icon size={19} aria-hidden="true" /><span>{label}</span></button>)}</nav><div className="model-status"><span className="status-pulse" aria-hidden="true" /><div><strong>Analista disponible</strong><span>Qwen 2.5 · Local</span></div></div></aside><main id="main-content" ref={mainRef} className="main-content" tabIndex="-1"><header className="topbar"><div><p className="eyebrow"><span className="live-dot" /> MODO DEMO · JORNADA 06</p><h1>{heading(view)}</h1></div><button type="button" className="primary-button" onClick={() => openChat()}><MessageCircle size={18} aria-hidden="true" />Nueva consulta</button></header>{view === 'Resumen' && <Overview onAnalyze={() => setView('Análisis')} onAsk={() => openChat('¿Qué debo vigilar antes de elegir una señal?')} onSelect={setSelected} />}{view === 'Análisis' && <Analysis filter={filter} setFilter={setFilter} shown={shown} onSelect={setSelected} />}{view === 'Consultas' && <Chat query={query} setQuery={setQuery} messages={messages} loading={loading} inputRef={inputRef} send={send} onPrompt={openChat} />}</main>{selected && <Detail signal={selected} closeRef={closeRef} close={() => setSelected(null)} ask={() => { setSelected(null); openChat(`Analiza los riesgos de ${selected.home} vs ${selected.away}.`) }} />}</div>
 }
 
-export default App;
+function Overview({ onAnalyze, onAsk, onSelect }) { const featured = signals[0]; return <div className="view-frame"><section className="hero-panel glass-panel"><div className="hero-copy"><p className="eyebrow">LECTURA DE PARTIDO</p><h2>Menos ruido.<br /><em>Mejor contexto.</em></h2><p>Señales explicadas para que entiendas qué cambia antes del silbatazo.</p><div className="hero-actions"><button type="button" className="primary-button" onClick={onAnalyze}>Ver señales <ArrowRight size={17} /></button><button type="button" className="text-button" onClick={onAsk}>Cómo usar el analista <ChevronRight size={17} /></button></div></div><div className="match-orbit" aria-label="Señal destacada: Sparta Praga contra RB Salzburg, confianza 85 por ciento"><div className="orbit-glow" /><span className="orbit-label">SEÑAL DESTACADA</span><div className="teams-line"><Mark code="SPA" tone="blue" /><span>vs</span><Mark code="RBS" tone="lime" /></div><strong>85<span>%</span></strong><small>nivel de confianza</small><button type="button" onClick={() => onSelect(featured)}>Ver contexto <ArrowRight size={15} /></button></div></section><section className="metric-grid" aria-label="Resumen de indicadores"><Metric icon={<CalendarDays />} title="Partidos observados" value="12" detail="durante las próximas 48 h" /><Metric icon={<TrendingUp />} accent="lime" title="Confianza promedio" value="76%" detail="en las señales disponibles" /><Metric icon={<Flame />} accent="coral" title="Señales para revisar" value="4" detail="con contexto suficiente" /></section><section className="summary-lower"><article className="featured-card glass-panel"><div className="section-title"><div><p className="eyebrow">EN EL RADAR</p><h2>La lectura de hoy</h2></div><span className="demo-tag"><Info size={13} />Datos demo</span></div><SignalCard item={featured} onSelect={onSelect} compact /><div className="card-footer"><span><Clock3 size={15} />Actualizado para demostración</span><button type="button" className="text-button" onClick={onAnalyze}>Explorar análisis <ArrowRight size={16} /></button></div></article><article className="quick-card glass-panel"><div className="section-title"><div><p className="eyebrow">EMPIEZA AQUÍ</p><h2>¿Qué quieres revisar?</h2></div></div><QuickAction icon={<ShieldCheck />} title="Entender una señal" detail="Confianza, riesgo y evidencia." onClick={() => onAsk('¿Qué debe tener una señal confiable?')} /><QuickAction icon={<Trophy />} title="Preparar un partido" detail="Consulta contexto y alineaciones." onClick={() => onAsk('¿Qué debo revisar en las alineaciones?')} /></article></section><Disclaimer /></div> }
+function Analysis({ filter, setFilter, shown, onSelect }) { return <div className="view-frame analysis-view"><section className="analysis-intro glass-panel"><div><p className="eyebrow">CENTRO DE SEÑALES</p><h2>Elige con el contexto al frente.</h2><p>Ordenamos las oportunidades de demostración según el nivel de evidencia, no según promesas.</p></div><div className="form-summary"><span>FORMA DE LA JORNADA</span><strong>+14<span>%</span></strong><small>señales en observación</small></div></section><div className="filter-row" aria-label="Filtrar señales"><Filter size={17} />{filters.map((value) => <button key={value} type="button" className={filter === value ? 'is-active' : ''} onClick={() => setFilter(value)} aria-pressed={filter === value}>{value}</button>)}</div><section className="signal-list" aria-label="Señales disponibles"><div className="list-header"><span>{shown.length} señales encontradas</span><span>Confianza <TrendingUp size={15} /></span></div>{shown.map((item) => <SignalCard key={item.id} item={item} onSelect={onSelect} />)}{shown.length === 0 && <div className="empty-state"><Search size={24} /><strong>No hay señales con este filtro</strong><p>Prueba otro nivel de confianza para ver el resto de la jornada demo.</p></div>}</section><Disclaimer demo /></div> }
+function Chat({ query, setQuery, messages, loading, inputRef, send, onPrompt }) { const prompts = ['¿Qué debo vigilar antes del partido?', 'Explícame el nivel de confianza', '¿Qué riesgo puede cambiar una señal?']; return <div className="view-frame consultations-view"><section className="chat-shell glass-panel"><div className="chat-heading"><div className="analyst-avatar"><Zap size={21} /></div><div><p className="eyebrow">ANALISTA LOCAL</p><h2>Pregunta con intención.</h2><p>Qwen 2.5 te ayuda a leer el contexto, riesgos y alineaciones.</p></div><span className="availability"><span />Disponible</span></div><div className="suggestion-row" aria-label="Preguntas sugeridas">{prompts.map((prompt) => <button type="button" key={prompt} onClick={() => onPrompt(prompt)}>{prompt}<ArrowRight size={15} /></button>)}</div><div className="chat-history" aria-live="polite" aria-busy={loading}>{messages.length === 0 ? <div className="empty-chat"><div className="empty-icon"><MessageCircle size={25} /></div><strong>Tu análisis empieza con una pregunta.</strong><p>Prueba una sugerencia o escribe el partido que quieres entender.</p></div> : messages.map((message, index) => <article className={`message ${message.role}`} key={`${message.role}-${index}`}><span>{message.role === 'user' ? 'Tú' : 'Analista IA'}</span><p>{message.text}</p></article>)}{loading && <article className="message assistant loading-message"><span>Analista IA</span><p><i /><i /><i /><b>Revisando el contexto…</b></p></article>}</div><form className="chat-composer" onSubmit={(event) => { event.preventDefault(); send() }}><label htmlFor="chat-query">Tu consulta</label><div className="input-row"><input id="chat-query" ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Ej. ¿Qué debo vigilar en Cruz Azul vs Toluca?" disabled={loading} /><button type="submit" className="send-button" disabled={loading || !query.trim()} aria-label="Enviar consulta"><Send size={18} /></button></div><small>El análisis es informativo; contrasta siempre con fuentes actuales.</small></form></section></div> }
+function SignalCard({ item, onSelect, compact = false }) { const level = item.confidence >= 80 ? 'high' : item.confidence >= 70 ? 'medium' : 'low'; return <article className={`signal-card ${compact ? 'is-compact' : ''}`}><div className="signal-card-main"><div className="league-line"><span>{item.league}</span><span><Clock3 size={14} />{item.kickoff}</span></div><div className="match-row"><div className="team-cluster"><Mark code={item.homeCode} tone="blue" /><strong>{item.home}</strong></div><span className="versus">vs</span><div className="team-cluster"><Mark code={item.awayCode} tone="lime" /><strong>{item.away}</strong></div></div><p className="market-label">{item.market}</p><p className="signal-detail">{item.detail}</p></div><div className="signal-score"><span className={`signal-badge score-${level}`}>{item.signal}</span><strong>{item.confidence}<small>%</small></strong><span>confianza</span><div className="confidence-track" aria-label={`Confianza: ${item.confidence}%`}><i style={{ width: `${item.confidence}%` }} /></div><button type="button" onClick={() => onSelect(item)}>Ver detalle <ArrowRight size={15} /></button></div></article> }
+function Detail({ signal, closeRef, close, ask }) { return <div className="detail-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && close()}><aside className="detail-sheet" role="dialog" aria-modal="true" aria-labelledby="detail-title"><header><div><p className="eyebrow">DETALLE DE LA SEÑAL · DEMO</p><h2 id="detail-title">{signal.home} <span>vs</span> {signal.away}</h2></div><button ref={closeRef} type="button" className="icon-button" onClick={close} aria-label="Cerrar detalle"><X size={20} /></button></header><div className="detail-score"><span className="signal-badge score-high">{signal.signal}</span><strong>{signal.confidence}<small>%</small></strong><p>{signal.market} <b>{signal.odd}</b></p></div><section><h3><BarChart3 size={18} />Por qué aparece</h3><p>{signal.detail}</p><ul>{signal.evidence.map((item) => <li key={item}><Star size={15} />{item}</li>)}</ul></section><section className="risk-section"><h3><CircleAlert size={18} />Riesgo a vigilar</h3><p>{signal.risk}</p></section><section><h3><TrendingUp size={18} />Forma reciente</h3><div className="form-row" aria-label={`Forma reciente: ${signal.form.join(', ')}`}>{signal.form.map((result, index) => <span className={`form-${result}`} key={`${result}-${index}`}>{result}</span>)}</div></section><footer><button type="button" className="primary-button" onClick={ask}><MessageCircle size={18} />Preguntar al analista</button><p><Info size={14} />Señal de demostración, no garantía.</p></footer></aside></div> }
+function Metric({ icon, title, value, detail, accent = 'blue' }) { return <article className={`metric-card accent-${accent}`}><span className="metric-icon">{icon}</span><div><p>{title}</p><strong>{value}</strong><small>{detail}</small></div></article> }
+function Mark({ code, tone }) { return <span className={`team-mark ${tone}`} aria-label={code}>{code}</span> }
+function QuickAction({ icon, title, detail, onClick }) { return <button type="button" className="quick-action" onClick={onClick}>{icon}<span><strong>{title}</strong><small>{detail}</small></span><ChevronRight /></button> }
+function Disclaimer({ demo = false }) { return <p className="disclaimer"><CircleAlert size={16} />{demo ? 'El contenido de esta pantalla es demostrativo y no representa datos en vivo.' : 'Una señal organiza evidencia disponible; no garantiza un resultado deportivo.'}</p> }
+function heading(view) { return view === 'Resumen' ? <>El partido se lee <em>antes</em>.</> : view === 'Análisis' ? <>Señales que merecen <em>mirarse bien</em>.</> : <>Tu pregunta abre el <em>juego</em>.</> }
